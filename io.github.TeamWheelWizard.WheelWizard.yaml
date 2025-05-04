@@ -46,11 +46,11 @@ modules:
       - ./nuget-sources.json
       - type: script
         commands:
-          - exec flatpak-spawn --directory="$HOME" --env=QT_QPA_PLATFORM="${QT_QPA_PLATFORM}" --host -- dolphin-emu $@
+          - exec flatpak-spawn --directory="$HOME" --env=QT_QPA_PLATFORM="${QT_QPA_PLATFORM}" --host -- dolphin-emu "$@"
         dest-filename: dolphin-emu
       - type: script
         commands:
-          - exec flatpak-spawn --directory="$HOME" --host -- flatpak $@
+          - exec flatpak-spawn --directory="$HOME" --host -- flatpak "$@"
         dest-filename: flatpak
     build-commands:
       - dotnet publish WheelWizard/WheelWizard.csproj -c Release --source ./nuget-sources --source /usr/lib/sdk/dotnet8/nuget/packages --self-contained true
