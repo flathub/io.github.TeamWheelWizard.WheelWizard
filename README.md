@@ -10,7 +10,7 @@ with several online features.
 In order to update the source files, you can use the
 `update-sources.sh` script provided in this repository:
 
-```bash
+```sh
 $ ./update-sources --dotnet <dotnet_version> --freedesktop <freedesktop_version> --commit <wheelwizard_commit>
 ```
 
@@ -22,6 +22,6 @@ of WheelWizard.
 To actually build and install the Flatpak locally using the local sources,
 you can use the `build-and-install-local.sh` script:
 
-```bash
+```sh
 $ ./build-and-install-local.sh
 ```
