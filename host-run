@@ -35,8 +35,13 @@ if [ -n "$SteamEnv" ] && [ -n "$STEAM_APP_ID" ]; then
 fi
 
 # Prepend final args of flatpak-spawn
-set -- --directory="$HOME" --watch-bus --host -- "$@"
-# At this point, we can add additional --env flags to flatpak-spawn
+set -- --directory="$HOME" --host -- "$@"
+# At this point, we can add additional flags to flatpak-spawn
+
+# Fix the reaper signaling in Steam environments with reaper
+if [ -n "$SteamEnv" ] && [ -n "$STEAM_APP_ID" ]; then
+  set -- --watch-bus "$@"
+fi
 
 # Expose Steam/SDL-related environment variables that might be needed
 if [ -n "$SteamEnv" ]; then
