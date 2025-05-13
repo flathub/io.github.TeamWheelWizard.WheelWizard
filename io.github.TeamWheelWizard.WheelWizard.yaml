@@ -44,47 +44,8 @@ modules:
         url: https://github.com/TeamWheelWizard/WheelWizard.git
         commit: 3d30f63753896ff6d145506def95c24a53d9f62d
       - ./nuget-sources.json
-      - type: script
-        commands:
-          - |
-            # Check against allowed executables, exit immediately otherwise
-            case "$1" in
-              dolphin-emu|flatpak)
-                ;;
-              *)
-                exit 1
-                ;;
-            esac
-
-            # Find the Steam app ID in the environment
-            STEAM_APP_ID=''
-            if [ -n "$MESA_GLSL_CACHE_DIR" ] && [ "$(basename "$MESA_GLSL_CACHE_DIR")" -ne 0 ] 2>/dev/null; then
-              STEAM_APP_ID="$(basename "$MESA_GLSL_CACHE_DIR")"
-            elif [ -n "$MESA_SHADER_CACHE_DIR" ] && [ "$(basename "$MESA_SHADER_CACHE_DIR")" -ne 0 ] 2>/dev/null; then
-              STEAM_APP_ID="$(basename "$MESA_SHADER_CACHE_DIR")"
-            elif [ -n "$STEAM_COMPAT_TRANSCODED_MEDIA_PATH" ] && [ "$(basename "$STEAM_COMPAT_TRANSCODED_MEDIA_PATH")" -ne 0 ] 2>/dev/null; then
-              STEAM_APP_ID="$(basename "$STEAM_COMPAT_TRANSCODED_MEDIA_PATH")"
-            fi
-
-            # The found app ID should only be valid if we have SteamEnv set
-            if [ -n "$SteamEnv" ] && [ -n "$STEAM_APP_ID" ]; then
-              REAPER="$HOME/.steam/bin/reaper"
-              # Gamescope requires the reaper process to be present in the process tree
-              set -- "$REAPER" 'SteamLaunch' "AppId=$STEAM_APP_ID" -- "$@"
-            fi
-
-            set -- \
-              flatpak-spawn \
-              --directory="${HOME}" \
-              --env=DISPLAY="${DISPLAY}" \
-              --env=WAYLAND_DISPLAY="${WAYLAND_DISPLAY}" \
-              --env=QT_QPA_PLATFORM="${QT_QPA_PLATFORM}" \
-              --host \
-              -- \
-              "$@"
-
-            exec "$@"
-        dest-filename: host-run
+      - type: file
+        path: host-run
       - type: script
         commands:
           - exec host-run dolphin-emu "$@"
