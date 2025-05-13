@@ -84,21 +84,21 @@ modules:
               "$@"
 
             exec "$@"
-        dest-filename: host-exec
+        dest-filename: host-run
       - type: script
         commands:
-          - host-exec dolphin-emu "$@"
+          - exec host-run dolphin-emu "$@"
         dest-filename: dolphin-emu
       - type: script
         commands:
-          - host-exec flatpak "$@"
+          - exec host-run flatpak "$@"
         dest-filename: flatpak
     build-commands:
       - dotnet publish WheelWizard/WheelWizard.csproj -c Release --source ./nuget-sources --source /usr/lib/sdk/dotnet8/nuget/packages --self-contained true
       - mkdir -p ${FLATPAK_DEST}/bin
       - cp -r --remove-destination WheelWizard/bin/Release/net*/$RUNTIME/publish/* "${FLATPAK_DEST}/bin"
       # Install custom host command wrapper
-      - install -m0755 ./host-exec "${FLATPAK_DEST}/bin/host-exec"
+      - install -m0755 ./host-run "${FLATPAK_DEST}/bin/host-run"
       # Expose host `dolphin-emu` if available
       - install -m0755 ./dolphin-emu "${FLATPAK_DEST}/bin/dolphin-emu"
       # Expose host `flatpak` for Dolphin interaction
