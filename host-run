@@ -1,0 +1,106 @@
+#!/bin/sh
+
+# Check against allowed executables, exit immediately otherwise
+case "$1" in
+  dolphin-emu|flatpak)
+    ;;
+  *)
+    exit 1
+    ;;
+esac
+
+# Find the Steam app ID in the environment
+STEAM_APP_ID=''
+if [ -n "$MESA_GLSL_CACHE_DIR" ] && [ "$(basename "$MESA_GLSL_CACHE_DIR")" -ne 0 ] 2>/dev/null; then
+  STEAM_APP_ID="$(basename "$MESA_GLSL_CACHE_DIR")"
+elif [ -n "$MESA_SHADER_CACHE_DIR" ] && [ "$(basename "$MESA_SHADER_CACHE_DIR")" -ne 0 ] 2>/dev/null; then
+  STEAM_APP_ID="$(basename "$MESA_SHADER_CACHE_DIR")"
+elif [ -n "$STEAM_COMPAT_TRANSCODED_MEDIA_PATH" ] && [ "$(basename "$STEAM_COMPAT_TRANSCODED_MEDIA_PATH")" -ne 0 ] 2>/dev/null; then
+  STEAM_APP_ID="$(basename "$STEAM_COMPAT_TRANSCODED_MEDIA_PATH")"
+fi
+
+# The found app ID should only be valid if we have SteamEnv set
+if [ -n "$SteamEnv" ] && [ -n "$STEAM_APP_ID" ]; then
+  # Make sure to kill the entire Dolphin sandbox when the reaper process dies
+  if [ "$1" = 'flatpak' ] && [ "$2" = 'run' ]; then
+    # Drop the original first two arguments
+    shift 2
+    # Add the original arguments again with -p inserted
+    set -- flatpak run -p "$@"
+  fi
+
+  REAPER="$HOME/.steam/bin/reaper"
+  # Gamescope requires the reaper process to be present in the process tree
+  set -- "$REAPER" 'SteamLaunch' "AppId=$STEAM_APP_ID" -- "$@"
+fi
+
+# Prepend final args of flatpak-spawn
+set -- --directory="$HOME" --watch-bus --host -- "$@"
+# At this point, we can add additional --env flags to flatpak-spawn
+
+# Expose Steam/SDL-related environment variables that might be needed
+if [ -n "$SteamEnv" ]; then
+  set -- \
+    --env=SteamEnv="$SteamEnv" \
+    --env=Steam3Master="$Steam3Master" \
+    --env=SteamAppId="$SteamAppId" \
+    --env=SteamAppUser="$SteamAppUser" \
+    --env=SteamUser="$SteamUser" \
+    --env=SteamDeck="$SteamDeck" \
+    --env=SteamTenfoot="$SteamTenfoot" \
+    --env=SteamGamepadUI="$SteamGamepadUI" \
+    --env=SteamGameId="$SteamGameId" \
+    --env=SteamOverlayGameId="$SteamOverlayGameId" \
+    --env=SteamClientLaunch="$SteamClientLaunch" \
+    --env=SteamVirtualGamepadInfo="$SteamVirtualGamepadInfo" \
+    --env=SteamGenericControllers="$SteamGenericControllers" \
+    --env=ENABLE_VK_LAYER_VALVE_steam_fossilize_1="$ENABLE_VK_LAYER_VALVE_steam_fossilize_1" \
+    --env=ENABLE_VK_LAYER_VALVE_steam_overlay_1="$ENABLE_VK_LAYER_VALVE_steam_overlay_1" \
+    --env=SRT_URLOPEN_PREFER_STEAM="$SRT_URLOPEN_PREFER_STEAM" \
+    --env=STEAM_MULTIPLE_XWAYLANDS="$STEAM_MULTIPLE_XWAYLANDS" \
+    --env=STEAM_GAMESCOPE_TEARING_SUPPORTED="$STEAM_GAMESCOPE_TEARING_SUPPORTED" \
+    --env=STEAM_GAMESCOPE_HAS_TEARING_SUPPORT="$STEAM_GAMESCOPE_HAS_TEARING_SUPPORT" \
+    --env=STEAM_GAMESCOPE_DYNAMIC_FPSLIMITER="$STEAM_GAMESCOPE_DYNAMIC_FPSLIMITER" \
+    --env=STEAM_GAMESCOPE_FANCY_SCALING_SUPPORT="$STEAM_GAMESCOPE_FANCY_SCALING_SUPPORT" \
+    --env=STEAM_GAMESCOPE_HDR_SUPPORTED="$STEAM_GAMESCOPE_HDR_SUPPORTED" \
+    --env=STEAM_GAMESCOPE_NIS_SUPPORTED="$STEAM_GAMESCOPE_NIS_SUPPORTED" \
+    --env=STEAM_GAMESCOPE_VRR_SUPPORTED="$STEAM_GAMESCOPE_VRR_SUPPORTED" \
+    --env=STEAM_USE_MANGOAPP="$STEAM_USE_MANGOAPP" \
+    --env=STEAM_DISABLE_MANGOAPP_ATOM_WORKAROUND="$STEAM_DISABLE_MANGOAPP_ATOM_WORKAROUND" \
+    --env=STEAM_MANGOAPP_HORIZONTAL_SUPPORTED="$STEAM_MANGOAPP_HORIZONTAL_SUPPORTED" \
+    --env=STEAM_MANGOAPP_PRESETS_SUPPORTED="$STEAM_MANGOAPP_PRESETS_SUPPORTED" \
+    --env=SDL_GAMECONTROLLER_ALLOW_STEAM_VIRTUAL_GAMEPAD="$SDL_GAMECONTROLLER_ALLOW_STEAM_VIRTUAL_GAMEPAD" \
+    --env=SDL_GAMECONTROLLER_IGNORE_DEVICES="$SDL_GAMECONTROLLER_IGNORE_DEVICES" \
+    --env=SDL_GAMECONTROLLER_USE_BUTTON_LABELS="$SDL_GAMECONTROLLER_USE_BUTTON_LABELS" \
+    --env=SDL_JOYSTICK_HIDAPI_STEAMXBOX="$SDL_JOYSTICK_HIDAPI_STEAMXBOX" \
+    --env=SDL_VIDEO_X11_DGAMOUSE="$SDL_VIDEO_X11_DGAMOUSE" \
+    "$@"
+fi
+
+# If running under gamescope, expose related environment variables
+if [ -n "$GAMESCOPE_WAYLAND_DISPLAY" ]; then
+  set -- \
+    --env=GAMESCOPE_WAYLAND_DISPLAY="$GAMESCOPE_WAYLAND_DISPLAY" \
+    --env=ENABLE_GAMESCOPE_WSI="$ENABLE_GAMESCOPE_WSI" \
+    --env=STEAM_GAME_DISPLAY_0="$STEAM_GAME_DISPLAY_0" \
+    --env=STEAM_GAME_DISPLAY_1="$STEAM_GAME_DISPLAY_1" \
+    --env=DXVK_HDR="$DXVK_HDR" \
+    --env=LIBEI_SOCKET="$LIBEI_SOCKET" \
+    --env=XWAYLAND_FORCE_ENABLE_EXTRA_MODES="$XWAYLAND_FORCE_ENABLE_EXTRA_MODES" \
+    --env=SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS="$SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS" \
+    --env=DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1="$DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1" \
+    --env=vk_xwayland_wait_ready="$vk_xwayland_wait_ready" \
+    "$@"
+fi
+
+# Finalize flatpak-spawn command
+set -- \
+  flatpak-spawn \
+  --env=DISPLAY="$DISPLAY" \
+  --env=WAYLAND_DISPLAY="$WAYLAND_DISPLAY" \
+  --env=QT_QPA_PLATFORM="$QT_QPA_PLATFORM" \
+  --env=XDG_CURRENT_DESKTOP="$XDG_CURRENT_DESKTOP" \
+  --env=XDG_SESSION_TYPE="$XDG_SESSION_TYPE" \
+  "$@"
+
+exec "$@"
