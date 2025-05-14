@@ -20,7 +20,18 @@ elif [ -n "$STEAM_COMPAT_TRANSCODED_MEDIA_PATH" ] && [ "$(basename "$STEAM_COMPA
 fi
 
 # The found app ID should only be valid if we have SteamEnv set
+REAPER=''
 if [ -n "$SteamEnv" ] && [ -n "$STEAM_APP_ID" ]; then
+  REAPER="$HOME/.steam/bin/reaper"
+  # Expanding this without quotes should not be a problem since STEAM_APP_ID is assumed to be numeric
+  REAPER_ARGS="SteamLaunch AppId=$STEAM_APP_ID --"
+elif [ -n "$GAMESCOPE_WAYLAND_DISPLAY" ]; then
+  # Assuming this is the host's gamescope that is running since we cannot support Flatpak gamescope
+  REAPER='gamescopereaper'
+  REAPER_ARGS='--'
+fi
+
+if [ -n "$REAPER" ]; then
   # Make sure to kill the entire Dolphin sandbox when the reaper process dies
   if [ "$1" = 'flatpak' ] && [ "$2" = 'run' ]; then
     # Drop the original first two arguments
@@ -29,9 +40,8 @@ if [ -n "$SteamEnv" ] && [ -n "$STEAM_APP_ID" ]; then
     set -- flatpak run -p "$@"
   fi
 
-  REAPER="$HOME/.steam/bin/reaper"
   # Gamescope requires the reaper process to be present in the process tree
-  set -- "$REAPER" 'SteamLaunch' "AppId=$STEAM_APP_ID" -- "$@"
+  set -- "$REAPER" $REAPER_ARGS "$@"
 fi
 
 # Prepend final args of flatpak-spawn
@@ -39,7 +49,7 @@ set -- --directory="$HOME" --host -- "$@"
 # At this point, we can add additional flags to flatpak-spawn
 
 # Fix the reaper signaling in Steam environments with reaper
-if [ -n "$SteamEnv" ] && [ -n "$STEAM_APP_ID" ]; then
+if [ -n "$REAPER" ]; then
   set -- --watch-bus "$@"
 fi
 
