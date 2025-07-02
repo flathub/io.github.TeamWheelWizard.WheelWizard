@@ -109,7 +109,7 @@ if [ -n "$GAMESCOPE_WAYLAND_DISPLAY" ]; then
 fi
 
 # If requested by the user, grab the value of `XAUTHORITY` directly from `systemd`
-if [ -n "GRAB_SYSTEMD_USER_XAUTHORITY" ]; then
+if [ -n "$GRAB_SYSTEMD_USER_XAUTHORITY" ]; then
   # Use `sh` to source the environment variables and dump `XAUTHORITY`
   XAUTHORITY="$(flatpak-spawn --directory="$HOME" --host -- systemctl --user show-environment | \
                 cat - <(echo 'echo "$XAUTHORITY"') | sh)"
