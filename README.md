@@ -25,3 +25,16 @@ you can use the `build-and-install-local.sh` script:
 ```sh
 $ ./build-and-install-local.sh
 ```
+
+## Fixing environment issues
+
+Users with Flatpak applications in their autostart configuration may
+experience issues related to their `XAUTHORITY` environment variable,
+since it might not exist in the context from which the Dolphin Flatpak
+is spawned.
+
+In order to use `systemd`'s user environment to fetch the `XAUTHORITY`
+from there, set `GRAB_SYSTEMD_USER_XAUTHORITY=1` as an environment variable
+override (e.g. through Flatseal). The launcher will then use
+`systemctl --user show-environment` exclusively to get the value for `XAUTHORITY`,
+similar to how you would expect it from `systemd-run --user`.
