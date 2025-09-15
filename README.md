@@ -11,7 +11,7 @@ In order to update the source files, you can use the
 `update-sources.sh` script provided in this repository:
 
 ```sh
-$ ./update-sources --dotnet <dotnet_version> --freedesktop <freedesktop_version> --commit <wheelwizard_commit>
+$ ./update-sources.sh --dotnet <dotnet_version> --freedesktop <freedesktop_version> --commit <wheelwizard_commit>
 ```
 
 The script will patch all .NET, Freedesktop versions along with the commit
