@@ -55,9 +55,19 @@ modules:
           - exec host-run flatpak "$@"
         dest-filename: flatpak
     build-commands:
-      - dotnet publish WheelWizard/WheelWizard.csproj -c Release --source ./nuget-sources --source /usr/lib/sdk/dotnet8/nuget/packages --self-contained true
+      - |
+          dotnet publish \
+            WheelWizard/WheelWizard.csproj \
+            -c Release \
+            --source ./nuget-sources \
+            --source /usr/lib/sdk/dotnet8/nuget/packages \
+            /p:PublishSingleFile=true \
+            /p:IncludeAllContentForSelfExtract=true \
+            /p:IncludeNativeLibrariesForSelfExtract=true \
+            /p:EnableCompressionInSingleFile=true \
+            --self-contained true
       - mkdir -p ${FLATPAK_DEST}/bin
-      - cp -r --remove-destination WheelWizard/bin/Release/net*/$RUNTIME/publish/* "${FLATPAK_DEST}/bin"
+      - cp -r --remove-destination WheelWizard/bin/Release/net*/$RUNTIME/publish/WheelWizard "${FLATPAK_DEST}/bin"
       # Install custom host command wrapper
       - install -m0755 ./host-run "${FLATPAK_DEST}/bin/host-run"
       # Expose host `dolphin-emu` if available
