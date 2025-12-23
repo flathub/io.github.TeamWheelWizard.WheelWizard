@@ -108,6 +108,13 @@ if [ -n "$GAMESCOPE_WAYLAND_DISPLAY" ]; then
     "$@"
 fi
 
+# https://bugs.dolphin-emu.org/issues/13754
+if [ -n "$SDL_JOYSTICK_HIDAPI_GAMECUBE" ]; then
+  set -- \
+    --env=SDL_JOYSTICK_HIDAPI_GAMECUBE="$SDL_JOYSTICK_HIDAPI_GAMECUBE" \
+    "$@"
+fi
+
 # If requested by the user, grab the value of `XAUTHORITY` directly from `systemd`
 if [ -n "$GRAB_SYSTEMD_USER_XAUTHORITY" ]; then
   # Use `sh` to source the environment variables and dump `XAUTHORITY`
