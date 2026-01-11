@@ -42,28 +42,31 @@ modules:
     sources:
       - type: git
         url: https://github.com/TeamWheelWizard/WheelWizard.git
-        commit: e37531e541b8489b89e9a52cbb50dff1d29458eb
+        commit: 2a03206b287df18737d91057871f249211d33468
       - ./nuget-sources.json
       - type: file
         path: host-run
+        dest: Flatpak
       - type: script
         commands:
           - exec host-run dolphin-emu "$@"
         dest-filename: dolphin-emu
+        dest: Flatpak
       - type: script
         commands:
           - exec host-run flatpak "$@"
         dest-filename: flatpak
+        dest: Flatpak
     build-commands:
       - dotnet publish WheelWizard/WheelWizard.csproj -c Release --source ./nuget-sources --source /usr/lib/sdk/dotnet8/nuget/packages --self-contained true
       - mkdir -p ${FLATPAK_DEST}/bin
       - cp -r --remove-destination WheelWizard/bin/Release/net*/$RUNTIME/publish/* "${FLATPAK_DEST}/bin"
       # Install custom host command wrapper
-      - install -m0755 ./host-run "${FLATPAK_DEST}/bin/host-run"
+      - install -m0755 Flatpak/host-run "${FLATPAK_DEST}/bin/host-run"
       # Expose host `dolphin-emu` if available
-      - install -m0755 ./dolphin-emu "${FLATPAK_DEST}/bin/dolphin-emu"
+      - install -m0755 Flatpak/dolphin-emu "${FLATPAK_DEST}/bin/dolphin-emu"
       # Expose host `flatpak` for Dolphin interaction
-      - install -m0755 ./flatpak "${FLATPAK_DEST}/bin/flatpak"
+      - install -m0755 Flatpak/flatpak "${FLATPAK_DEST}/bin/flatpak"
       # Install metadata files
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.desktop" "${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop"
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.png" "${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/${FLATPAK_ID}.png"
