@@ -20,10 +20,10 @@ of WheelWizard.
 **Dependencies**: `coreutils`, `diffutils`, `flatpak`, `git`, `grep`, `patch`, `python3`, `sed`, `yq`.
 
 To actually build and install the Flatpak locally using the local sources,
-you can use the `build-and-install-local.sh` script:
+you can use the `build-and-install.sh` script:
 
 ```sh
-$ ./build-and-install-local.sh
+$ ./build-and-install.sh
 ```
 
 ## Fixing environment issues
