@@ -57,6 +57,8 @@ modules:
           - exec host-run flatpak "$@"
         dest-filename: flatpak
         dest: Flatpak
+      - type: patch
+        path: patches/portal-access.patch
     build-commands:
       - dotnet publish WheelWizard/WheelWizard.csproj -c Release --source ./nuget-sources --source /usr/lib/sdk/dotnet8/nuget/packages --self-contained true
       - mkdir -p ${FLATPAK_DEST}/bin
