@@ -115,8 +115,15 @@ if [ -n "$SDL_JOYSTICK_HIDAPI_GAMECUBE" ]; then
     "$@"
 fi
 
-# If requested by the user, grab the value of `XAUTHORITY` directly from `systemd`
-if [ -n "$GRAB_SYSTEMD_USER_XAUTHORITY" ]; then
+XAUTHORITY="$(flatpak-spawn --directory="$HOME" --host -- sh -c 'echo $XAUTHORITY')"
+# If the `XAUTHORITY` environment variable is not set for spawned host processes,
+# require `GRAB_SYSTEMD_USER_XAUTHORITY` (if allowed)
+if [ -z "$XAUTHORITY" ] && [ "${GRAB_SYSTEMD_USER_XAUTHORITY:-}" != "0" ]; then
+  GRAB_SYSTEMD_USER_XAUTHORITY=1
+fi
+
+# If required or requested by the user, grab the value of `XAUTHORITY` directly from `systemd`
+if [ "${GRAB_SYSTEMD_USER_XAUTHORITY:-0}" != "0" ]; then
   # Use `sh` to source the environment variables and dump `XAUTHORITY`
   XAUTHORITY="$(flatpak-spawn --directory="$HOME" --host -- systemctl --user show-environment | \
                 cat - <(echo 'echo "$XAUTHORITY"') | sh)"

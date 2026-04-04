@@ -38,3 +38,6 @@ from there, set `GRAB_SYSTEMD_USER_XAUTHORITY=1` as an environment variable
 override (e.g. through Flatseal). The launcher will then use
 `systemctl --user show-environment` exclusively to get the value for `XAUTHORITY`,
 similar to how you would expect it from `systemd-run --user`.
+The requirement of `GRAB_SYSTEMD_USER_XAUTHORITY=1` will be auto-detected and set
+if the host's `XAUTHORITY` is found to be empty. To disable this, set
+`GRAB_SYSTEMD_USER_XAUTHORITY=0` instead.
