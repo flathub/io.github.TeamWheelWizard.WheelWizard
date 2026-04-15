@@ -42,7 +42,7 @@ modules:
     sources:
       - type: git
         url: https://github.com/TeamWheelWizard/WheelWizard.git
-        commit: aecf507315c132b38d8afa7e07619c4ae1c4d639
+        commit: 33a59dba1d2b69b452e3900cf9f992ddff4f42ce
       - ./nuget-sources.json
       - type: file
         path: host-run
@@ -57,8 +57,6 @@ modules:
           - exec host-run flatpak "$@"
         dest-filename: flatpak
         dest: Flatpak
-      - type: patch
-        path: patches/portal-access.patch
     build-commands:
       - dotnet publish WheelWizard/WheelWizard.csproj -c Release --source ./nuget-sources --source /usr/lib/sdk/dotnet8/nuget/packages --self-contained true
       - mkdir -p ${FLATPAK_DEST}/bin
