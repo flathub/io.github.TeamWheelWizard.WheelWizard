@@ -127,6 +127,13 @@
     },
     {
         "type": "file",
+        "url": "https://api.nuget.org/v3-flatcontainer/dotnet.reproduciblebuilds/2.0.2/dotnet.reproduciblebuilds.2.0.2.nupkg",
+        "sha512": "a178d6afc17ae80d526e675b09a9ad7368d51f7bfd3146631896daff310a67fe73eb8648547cb101ae6485661ea513635c70774a5652bbe597945a98b3b43585",
+        "dest": "nuget-sources",
+        "dest-filename": "dotnet.reproduciblebuilds.2.0.2.nupkg"
+    },
+    {
+        "type": "file",
         "url": "https://api.nuget.org/v3-flatcontainer/harfbuzzsharp/7.3.0.3/harfbuzzsharp.7.3.0.3.nupkg",
         "sha512": "bed625c58228c404f860fb3e247fb6ca3209c93fea62da498ba43419500bd40944b2e117f50f587f860101a6c6478ad1d18075f655376d1749d238d74b6a0bd3",
         "dest": "nuget-sources",

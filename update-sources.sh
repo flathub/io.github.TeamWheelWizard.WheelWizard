@@ -79,6 +79,10 @@ flatpak install --user --noninteractive flathub "org.freedesktop.Sdk.Extension.d
 git clone "https://github.com/$REPO_GITHUB_USER/$REPO_NAME"
 pushd "$REPO_NAME"
 git checkout "$COMMIT"
+for patch in ~1/patches/*.patch; do
+  [ -e "$patch" ] || continue
+  git apply "$patch"
+done
 popd
 
 curl -OL "$DOTNET_GENERATOR_URL"
