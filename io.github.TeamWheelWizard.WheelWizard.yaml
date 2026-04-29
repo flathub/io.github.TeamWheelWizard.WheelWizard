@@ -57,10 +57,8 @@ modules:
           - exec host-run flatpak "$@"
         dest-filename: flatpak
         dest: Flatpak
-      - type: patch
-        path: patches/reproducible-builds.patch
     build-commands:
-      - CI=true DOTNET_CLI_TELEMETRY_OPTOUT=true dotnet publish WheelWizard/WheelWizard.csproj -c Release --source ./nuget-sources --source /usr/lib/sdk/dotnet8/nuget/packages --self-contained true
+      - dotnet publish WheelWizard/WheelWizard.csproj -c Release --source ./nuget-sources --source /usr/lib/sdk/dotnet8/nuget/packages --self-contained true
       - mkdir -p ${FLATPAK_DEST}/bin
       - cp -r --remove-destination WheelWizard/bin/Release/net*/$RUNTIME/publish/* "${FLATPAK_DEST}/bin"
       # Install custom host command wrapper
