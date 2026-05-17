@@ -42,7 +42,7 @@ modules:
     sources:
       - type: git
         url: https://github.com/TeamWheelWizard/WheelWizard.git
-        commit: 33a59dba1d2b69b452e3900cf9f992ddff4f42ce
+        commit: 87eb854567fb3d59e9ed507a2db64e6ff0de9f68
       - ./nuget-sources.json
       - type: file
         path: host-run
