@@ -554,10 +554,10 @@
     },
     {
         "type": "file",
-        "url": "https://api.nuget.org/v3-flatcontainer/sharpcompress/0.39.0/sharpcompress.0.39.0.nupkg",
-        "sha512": "1a7c0818833a8cb0589f935cfecd9cb5fdd8f18f69c3b57d766a7982bfeda4408c18a8aba80da6bfbc51caef12a3678200f4c8b6d65e217e6c1c4f2549968a67",
+        "url": "https://api.nuget.org/v3-flatcontainer/sharpcompress/0.48.1/sharpcompress.0.48.1.nupkg",
+        "sha512": "f494108380de31779145601e358647cca06e6a06facb30972a0bbd04958dd59f5be349ffaaa9d4f2e35acd17489b649bc55345d9ef2a04736aa95e5aa8e9d3c1",
         "dest": "nuget-sources",
-        "dest-filename": "sharpcompress.0.39.0.nupkg"
+        "dest-filename": "sharpcompress.0.48.1.nupkg"
     },
     {
         "type": "file",
@@ -593,13 +593,6 @@
         "sha512": "d18bd8194041c7ffb79302d4f1be584e8c024e88b12cb4669a738cae551da3d3e3924087bb0aa42d34a9003cfb35037d73637894e67d02223d100a1b4215eeec",
         "dest": "nuget-sources",
         "dest-filename": "skiasharp.nativeassets.win32.2.88.9.nupkg"
-    },
-    {
-        "type": "file",
-        "url": "https://api.nuget.org/v3-flatcontainer/system.buffers/4.6.0/system.buffers.4.6.0.nupkg",
-        "sha512": "8916c9c93497f5b255a5444b18b896f05824e557e6e62182cedc38206e08258731272f815d3084804585789b4ee9cfa43e752642ef3b28ae66d7cf3ea9b12b71",
-        "dest": "nuget-sources",
-        "dest-filename": "system.buffers.4.6.0.nupkg"
     },
     {
         "type": "file",
@@ -659,16 +652,9 @@
     },
     {
         "type": "file",
-        "url": "https://api.nuget.org/v3-flatcontainer/tmds.dbus.protocol/0.20.0/tmds.dbus.protocol.0.20.0.nupkg",
-        "sha512": "602cf251f034d41a4feef63f0d77c3005553f88abd5ba9cf941d0f731369aa1c0a8844e89686f7fd3a1ad8e02068b5c3b4dd3e719fdb40cb603b9ca3b0e22e8e",
+        "url": "https://api.nuget.org/v3-flatcontainer/tmds.dbus.protocol/0.21.3/tmds.dbus.protocol.0.21.3.nupkg",
+        "sha512": "f0ef19dd98225a5881462f891183c394d8aa8925b3a64084a6bdca15af9bf8bbd98c017fd226c8f99aa922f4887abbad6f920ac90ac61972447b92e1b5ffe834",
         "dest": "nuget-sources",
-        "dest-filename": "tmds.dbus.protocol.0.20.0.nupkg"
-    },
-    {
-        "type": "file",
-        "url": "https://api.nuget.org/v3-flatcontainer/zstdsharp.port/0.8.4/zstdsharp.port.0.8.4.nupkg",
-        "sha512": "d37ac5d00f1d5ed91cc0b974d63450fd55fd88530d39fe3ab912244f36867a05541a517ec3733ce27ae43fa8dd2a8120b6d600e25ebdfe18172ba5715b026dc9",
-        "dest": "nuget-sources",
-        "dest-filename": "zstdsharp.port.0.8.4.nupkg"
+        "dest-filename": "tmds.dbus.protocol.0.21.3.nupkg"
     }
 ]
