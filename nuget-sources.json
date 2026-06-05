@@ -656,5 +656,12 @@
         "sha512": "f0ef19dd98225a5881462f891183c394d8aa8925b3a64084a6bdca15af9bf8bbd98c017fd226c8f99aa922f4887abbad6f920ac90ac61972447b92e1b5ffe834",
         "dest": "nuget-sources",
         "dest-filename": "tmds.dbus.protocol.0.21.3.nupkg"
+    },
+    {
+        "type": "file",
+        "url": "https://api.nuget.org/v3-flatcontainer/yamldotnet/17.1.0/yamldotnet.17.1.0.nupkg",
+        "sha512": "3d7463eb51c365452884612439059811c6131d3bce35df4748f3e373f0c9f8e5c175c8f8791d4532d6d2f3a36197d4630b4af7263081167f5f9ef13143f8ddab",
+        "dest": "nuget-sources",
+        "dest-filename": "yamldotnet.17.1.0.nupkg"
     }
 ]
