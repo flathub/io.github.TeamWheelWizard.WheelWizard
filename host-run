@@ -116,20 +116,29 @@ if [ -n "$SDL_JOYSTICK_HIDAPI_GAMECUBE" ]; then
 fi
 
 XAUTHORITY="$(flatpak-spawn --directory="$HOME" --host -- sh -c 'echo $XAUTHORITY')"
+echo "Current XAUTHORITY for spawned host processes: $XAUTHORITY"
+echo "Current GRAB_SYSTEMD_USER_XAUTHORITY: $GRAB_SYSTEMD_USER_XAUTHORITY"
 # If the `XAUTHORITY` environment variable is not set for spawned host processes,
 # require `GRAB_SYSTEMD_USER_XAUTHORITY` (if allowed)
 if [ -z "$XAUTHORITY" ] && [ "${GRAB_SYSTEMD_USER_XAUTHORITY:-}" != "0" ]; then
+  echo 'Setting GRAB_SYSTEMD_USER_XAUTHORITY=1'
   GRAB_SYSTEMD_USER_XAUTHORITY=1
 fi
 
 # If required or requested by the user, grab the value of `XAUTHORITY` directly from `systemd`
-if [ "${GRAB_SYSTEMD_USER_XAUTHORITY:-0}" != "0" ]; then
+if [ "${GRAB_SYSTEMD_USER_XAUTHORITY:-0}" != "0" ] && \
+   flatpak-spawn --directory="$HOME" --host -- systemctl --version >/dev/null; then
   # Use `sh` to source the environment variables and dump `XAUTHORITY`
   XAUTHORITY="$(flatpak-spawn --directory="$HOME" --host -- systemctl --user show-environment | \
                 cat - <(echo 'echo "$XAUTHORITY"') | sh)"
-  set -- \
-    --env=XAUTHORITY="$XAUTHORITY" \
-    "$@"
+  if [ -n "$XAUTHORITY" ]; then
+    echo "Setting XAUTHORITY=$XAUTHORITY for spawned host processes"
+    set -- \
+      --env=XAUTHORITY="$XAUTHORITY" \
+      "$@"
+  else
+    echo 'Grabbed XAUTHORITY was empty, ignoring'
+  fi
 fi
 
 # Finalize flatpak-spawn command
@@ -141,5 +150,7 @@ set -- \
   --env=XDG_CURRENT_DESKTOP="$XDG_CURRENT_DESKTOP" \
   --env=XDG_SESSION_TYPE="$XDG_SESSION_TYPE" \
   "$@"
+
+set -x
 
 exec "$@"
