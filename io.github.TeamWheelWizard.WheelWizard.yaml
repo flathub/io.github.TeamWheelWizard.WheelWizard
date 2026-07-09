@@ -42,7 +42,7 @@ modules:
     sources:
       - type: git
         url: https://github.com/TeamWheelWizard/WheelWizard.git
-        commit: 8df6d60f1c89c99a1651921b2424da4707f6a1f6
+        commit: 4137cd3f991722b183072bcf0c8f3f96b34d7525
       - ./nuget-sources.json
       - type: file
         path: host-run
@@ -89,5 +89,6 @@ modules:
       - install -m0755 Flatpak/flatpak "${FLATPAK_DEST}/bin/flatpak"
       # Install metadata files
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.desktop" "${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop"
+      - install -D -m0644 "Flatpak/${FLATPAK_ID}-url-handler.desktop" "${FLATPAK_DEST}/share/applications/${FLATPAK_ID}-url-handler.desktop"
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.png" "${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/${FLATPAK_ID}.png"
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.metainfo.xml" "${FLATPAK_DEST}/share/metainfo/${FLATPAK_ID}.metainfo.xml"
