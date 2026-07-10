@@ -24,8 +24,7 @@ REAPER=''
 if [ -n "$SteamEnv" ] && [ -n "$STEAM_APP_ID" ]; then
   REAPER="$HOME/.steam/bin/reaper"
   if [ "$(flatpak-spawn --directory="$HOME" --host -- "$REAPER" -- echo test)" != "test" ]; then
-    DATA_HOME="$(cat <(echo 'echo "$XDG_DATA_HOME"') | flatpak-spawn --directory="$HOME" --host -- sh)"
-    DATA_HOME="${DATA_HOME:-$HOME/.local/share}"
+    DATA_HOME="${HOST_XDG_DATA_HOME:-$HOME/.local/share}"
     REAPER="${DATA_HOME}/Steam/steamrt64/reaper"
   fi
   # Expanding this without quotes should not be a problem since STEAM_APP_ID is assumed to be numeric
