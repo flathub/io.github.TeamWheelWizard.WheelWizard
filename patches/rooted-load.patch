@@ -1,0 +1,13 @@
+diff --git a/WheelWizard/Services/PathManager.cs b/WheelWizard/Services/PathManager.cs
+index d793e853..be9d668d 100644
+--- a/WheelWizard/Services/PathManager.cs
++++ b/WheelWizard/Services/PathManager.cs
+@@ -573,7 +573,7 @@ public static class PathManager
+         get
+         {
+             var loadFolderPath = LoadFolderPath;
+-            if (!string.IsNullOrWhiteSpace(loadFolderPath) && Path.IsPathRooted(loadFolderPath))
++            if (!string.IsNullOrWhiteSpace(loadFolderPath))
+                 return Path.Combine(loadFolderPath, "Riivolution", "WheelWizard");
+ 
+             return Path.Combine(WheelWizardAppdataPath, "RetroRewind");

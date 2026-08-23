@@ -3,11 +3,11 @@ runtime: org.freedesktop.Platform
 runtime-version: '25.08'
 sdk: org.freedesktop.Sdk
 sdk-extensions:
-  - org.freedesktop.Sdk.Extension.dotnet8
+  - org.freedesktop.Sdk.Extension.dotnet10
 build-options:
-  prepend-path: '/usr/lib/sdk/dotnet8/bin'
-  append-ld-library-path: '/usr/lib/sdk/dotnet8/lib'
-  prepend-pkg-config-path: '/usr/lib/sdk/dotnet8/lib/pkgconfig'
+  prepend-path: '/usr/lib/sdk/dotnet10/bin'
+  append-ld-library-path: '/usr/lib/sdk/dotnet10/lib'
+  prepend-pkg-config-path: '/usr/lib/sdk/dotnet10/lib/pkgconfig'
   arch:
     aarch64:
       env:
@@ -49,14 +49,14 @@ modules:
   - name: dotnet
     buildsystem: simple
     build-commands:
-    - /usr/lib/sdk/dotnet8/bin/install.sh
+    - /usr/lib/sdk/dotnet10/bin/install.sh
 
   - name: WheelWizard
     buildsystem: simple
     sources:
       - type: git
         url: https://github.com/TeamWheelWizard/WheelWizard.git
-        commit: 4137cd3f991722b183072bcf0c8f3f96b34d7525
+        commit: 109f7802b303e3d1e178b57e9791f61edaf6d6d0
       - ./nuget-sources.json
       - type: file
         path: host-run
@@ -71,6 +71,8 @@ modules:
           - exec host-run flatpak "$@"
         dest-filename: flatpak
         dest: Flatpak
+      - type: patch
+        path: patches/rooted-load.patch
     build-commands:
       - >
         DOTNET_CLI_TELEMETRY_OPTOUT=true dotnet
@@ -91,7 +93,7 @@ modules:
         -p:IncludeSourceRevisionInInformationalVersion=false
         -c Release
         --source ./nuget-sources
-        --source /usr/lib/sdk/dotnet8/nuget/packages
+        --source /usr/lib/sdk/dotnet10/nuget/packages
         --no-self-contained
       - mkdir -p ${FLATPAK_DEST}/bin
       - cp -r --remove-destination WheelWizard/bin/Release/net*/publish/* "${FLATPAK_DEST}/bin"
