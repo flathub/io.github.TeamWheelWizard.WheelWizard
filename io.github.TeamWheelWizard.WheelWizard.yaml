@@ -56,7 +56,7 @@ modules:
     sources:
       - type: git
         url: https://github.com/TeamWheelWizard/WheelWizard.git
-        commit: 109f7802b303e3d1e178b57e9791f61edaf6d6d0
+        commit: 7abafb38a8fa2ceae1ebcdccbe8cf99df6d6e845
       - ./nuget-sources.json
       - type: file
         path: host-run
@@ -71,8 +71,6 @@ modules:
           - exec host-run flatpak "$@"
         dest-filename: flatpak
         dest: Flatpak
-      - type: patch
-        path: patches/rooted-load.patch
     build-commands:
       - >
         DOTNET_CLI_TELEMETRY_OPTOUT=true dotnet
