@@ -89,7 +89,7 @@ curl -OL "$DOTNET_GENERATOR_URL"
 python3 "$DOTNET_GENERATOR" --dotnet "$DOTNET_VERSION" --freedesktop "$FREEDESKTOP_VERSION" nuget-sources.json \
   "$REPO_NAME/$REPO_NAME/$REPO_NAME.csproj"
 
-sed -i -e "s|dotnet[^[:space:]/]|dotnet$DOTNET_VERSION|g" "$MANIFEST"
+sed -i -e "s|dotnet[^[:space:]/]+|dotnet$DOTNET_VERSION|g" "$MANIFEST"
 sed -i -e "s|^runtime-version:.*|runtime-version: '$FREEDESKTOP_VERSION'|g" "$MANIFEST"
 yq -y . "$MANIFEST" | tee "$MANIFEST.1" >/dev/null
 yq -y "(.modules[] \
