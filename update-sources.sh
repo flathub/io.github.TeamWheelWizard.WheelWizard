@@ -11,11 +11,11 @@ DOTNET_GENERATOR_URL="https://raw.githubusercontent.com/flatpak/flatpak-builder-
 MANIFEST='io.github.TeamWheelWizard.WheelWizard.yaml'
 
 DOTNET_VERSION=''
-FREEDESKTOP_VERSION=''
+QT_VERSION=''
 COMMIT=''
 
 usage() {
-  echo "Usage: $0 --dotnet <version> --freedesktop <version> --commit <commit>"
+  echo "Usage: $0 --dotnet <version> --qt <version> --commit <commit>"
   exit 1
 }
 
@@ -35,12 +35,12 @@ while [ "$#" -gt 0 ]; do
         usage
       fi
       ;;
-    --freedesktop)
+    --qt)
       if [ -n "$2" ] && [ "${2:0:2}" != "--" ]; then
-        FREEDESKTOP_VERSION="$2"
+        QT_VERSION="$2"
         shift 2
       else
-        echo "[-] --freedesktop requires a version argument."
+        echo "[-] --qt requires a version argument."
         usage
       fi
       ;;
@@ -64,14 +64,45 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-if [ -z "$DOTNET_VERSION" ] || [ -z "$FREEDESKTOP_VERSION" ] || [ -z "$COMMIT" ]; then
-  echo "[-] Options --dotnet, --freedesktop and --commit are required."
+if [ -z "$DOTNET_VERSION" ] || [ -z "$QT_VERSION" ] || [ -z "$COMMIT" ]; then
+  echo "[-] Options --dotnet, --qt and --commit are required."
   usage
+fi
+
+flatpak remote-add --user --if-not-exists flathub 'https://dl.flathub.org/repo/flathub.flatpakrepo'
+
+FREEDESKTOP_VERSION=$(
+  flatpak --user remote-info --show-metadata flathub "org.kde.Sdk//$QT_VERSION" |
+    awk '
+      # We need to look for the Freedesktop version as we require the .NET SDK extension in the manifest.
+      # This tries to match the extension point that the KDE SDK inherits.
+      !found && /^\[Extension org\.freedesktop\.Sdk\.Extension\]/ {
+        found = 1
+  next
+      }
+
+      found {
+        # Stop at the first blank line or line beginning with a `[`
+  if ($0 == "" || $0 ~ /^\[/) {
+          exit
+        }
+  # Extract the required version number
+        if ($0 ~ /^version = /) {
+          sub(/^version = /, "")
+          print
+          exit
+        }
+      }
+    '
+)
+
+if [ -z "$FREEDESKTOP_VERSION" ]; then
+  echo "[-] Freedesktop version could not be determined."
+  exit 1
 fi
 
 cleanup
 
-flatpak remote-add --user --if-not-exists flathub 'https://dl.flathub.org/repo/flathub.flatpakrepo'
 # Required Flatpaks for the .NET generator
 flatpak install --user --noninteractive flathub "org.freedesktop.Sdk//$FREEDESKTOP_VERSION"
 flatpak install --user --noninteractive flathub "org.freedesktop.Sdk.Extension.dotnet$DOTNET_VERSION//$FREEDESKTOP_VERSION"
@@ -79,7 +110,7 @@ flatpak install --user --noninteractive flathub "org.freedesktop.Sdk.Extension.d
 git clone "https://github.com/$REPO_GITHUB_USER/$REPO_NAME"
 pushd "$REPO_NAME"
 git checkout "$COMMIT"
-for patch in ~1/patches/*.patch; do
+for patch in ~1/patches/WheelWizard/*.patch; do
   [ -e "$patch" ] || continue
   git apply "$patch"
 done
@@ -90,7 +121,7 @@ python3 "$DOTNET_GENERATOR" --dotnet "$DOTNET_VERSION" --freedesktop "$FREEDESKT
   "$REPO_NAME/$REPO_NAME/$REPO_NAME.csproj"
 
 sed -i -e "s|dotnet[^[:space:]/]+|dotnet$DOTNET_VERSION|g" "$MANIFEST"
-sed -i -e "s|^runtime-version:.*|runtime-version: '$FREEDESKTOP_VERSION'|g" "$MANIFEST"
+sed -i -e "s|^runtime-version:.*|runtime-version: '$QT_VERSION'|g" "$MANIFEST"
 yq -y . "$MANIFEST" | tee "$MANIFEST.1" >/dev/null
 yq -y "(.modules[] \
   | select(has(\"sources\")) \

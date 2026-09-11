@@ -1,9 +1,52 @@
 id: io.github.TeamWheelWizard.WheelWizard
-runtime: org.freedesktop.Platform
-runtime-version: '25.08'
-sdk: org.freedesktop.Sdk
+runtime: org.kde.Sdk
+runtime-version: '6.11'
+sdk: org.kde.Sdk
+separate-locales: false
+command: WheelWizard
+
 sdk-extensions:
   - org.freedesktop.Sdk.Extension.dotnet10
+
+finish-args:
+  #- --device=dri
+  # TODO: Replace this with wayland and fallback-x11 once Wayland support
+  #       becomes available:
+  #       https://github.com/AvaloniaUI/Avalonia/pull/8003
+  - --socket=x11
+  - --share=ipc
+  - --env=DOTNET_ROOT=/app/lib/dotnet
+  - --share=network
+  - --allow=bluetooth
+  - --device=all
+  - --socket=pulseaudio
+  # This effectively disables sandboxing (`flatpak-spawn --host -- ...`)
+  #- --talk-name=org.freedesktop.Flatpak
+  # To also support native Dolphin
+  - --filesystem=~/.dolphin-emu
+  - --filesystem=xdg-config/dolphin-emu
+  - --filesystem=xdg-data/dolphin-emu
+  # To have access to the directories from the start for Flatpak Dolphin
+  - --filesystem=~/.var/app/org.DolphinEmu.dolphin-emu/config/dolphin-emu:create
+  - --filesystem=~/.var/app/org.DolphinEmu.dolphin-emu/data/dolphin-emu:create
+  # The following finish-args are from Dolphin...
+  - --filesystem=xdg-run/app/com.discordapp.Discord:create
+  - --filesystem=xdg-run/discord-ipc-0:create
+  # Required to disable the screensaver in various desktops
+  - --talk-name=org.freedesktop.ScreenSaver
+  - --talk-name=org.xfce.ScreenSaver
+  - --talk-name=org.mate.ScreenSaver
+  # Required for Gamescope on Steam Deck
+  - --filesystem=xdg-run/gamescope-0:ro
+
+cleanup-commands:
+  - >
+    find "${FLATPAK_DEST}/bin/runtimes"
+    -mindepth 1
+    -maxdepth 1
+    -not -name "$RUNTIME"
+    -exec rm -rf {} +
+
 build-options:
   prepend-path: '/usr/lib/sdk/dotnet10/bin'
   append-ld-library-path: '/usr/lib/sdk/dotnet10/lib'
@@ -16,36 +59,44 @@ build-options:
       env:
         RUNTIME: 'linux-x64'
 
-command: WheelWizard
-
-cleanup-commands:
-  - >
-    find "${FLATPAK_DEST}/bin/runtimes"
-    -mindepth 1
-    -maxdepth 1
-    -not -name "$RUNTIME"
-    -exec rm -rf {} +
-
-finish-args:
-  - --device=dri
-  # TODO: Replace this with wayland and fallback-x11 once Wayland support
-  #       becomes available:
-  #       https://github.com/AvaloniaUI/Avalonia/pull/8003
-  - --socket=x11
-  - --share=ipc
-  - --env=DOTNET_ROOT=/app/lib/dotnet
-  - --share=network
-  # This effectively disables sandboxing (`flatpak-spawn --host -- ...`)
-  - --talk-name=org.freedesktop.Flatpak
-  # To also support native Dolphin
-  - --filesystem=~/.dolphin-emu
-  - --filesystem=xdg-config/dolphin-emu
-  - --filesystem=xdg-data/dolphin-emu
-  # To have access to the directories from the start for Flatpak Dolphin
-  - --filesystem=~/.var/app/org.DolphinEmu.dolphin-emu/config/dolphin-emu:create
-  - --filesystem=~/.var/app/org.DolphinEmu.dolphin-emu/data/dolphin-emu:create
-
 modules:
+  # Enables motion controls on non-wii controllers (switch, ps4, etc)
+  # Requires a udev rule enabling Motion Sensors access
+  - name: libevdev
+    buildsystem: meson
+    config-opts:
+      - -Dtests=disabled
+      - -Ddocumentation=disabled
+    cleanup:
+      - /share/man
+    sources:
+      - type: archive
+        url: https://www.freedesktop.org/software/libevdev/libevdev-1.13.7.tar.xz
+        sha256: 0caf824971108f15bb2ad356433bae198d7d3bf1e82d43f63626e069e060bfa6
+        x-checker-data:
+          type: anitya
+          project-id: 20540
+          url-template: https://www.freedesktop.org/software/libevdev/libevdev-$version.tar.xz
+
+  - name: libxml2-legacy
+    buildsystem: autotools
+    config-opts:
+      - --with-python=no
+    cleanup:
+      - /share/aclocal
+      - /share/doc
+      - /share/gtk-doc
+      - /share/man
+    sources:
+      - type: archive
+        url: https://download.gnome.org/sources/libxml2/2.13/libxml2-2.13.9.tar.xz
+        sha256: a2c9ae7b770da34860050c309f903221c67830c86e4a7e760692b803df95143a
+        x-checker-data:
+          type: gnome
+          name: libxml2
+          versions:
+            <: 2.14.0
+
   - name: dotnet
     buildsystem: simple
     build-commands:
@@ -53,24 +104,6 @@ modules:
 
   - name: WheelWizard
     buildsystem: simple
-    sources:
-      - type: git
-        url: https://github.com/TeamWheelWizard/WheelWizard.git
-        commit: 86618e7367df935d78401583136e492c6f00fa27
-      - ./nuget-sources.json
-      - type: file
-        path: host-run
-        dest: Flatpak
-      - type: script
-        commands:
-          - exec host-run dolphin-emu "$@"
-        dest-filename: dolphin-emu
-        dest: Flatpak
-      - type: script
-        commands:
-          - exec host-run flatpak "$@"
-        dest-filename: flatpak
-        dest: Flatpak
     build-commands:
       - >
         DOTNET_CLI_TELEMETRY_OPTOUT=true dotnet
@@ -93,16 +126,54 @@ modules:
         --source ./nuget-sources
         --source /usr/lib/sdk/dotnet10/nuget/packages
         --no-self-contained
-      - mkdir -p ${FLATPAK_DEST}/bin
+      - mkdir -p "${FLATPAK_DEST}/bin"
       - cp -r --remove-destination WheelWizard/bin/Release/net*/publish/* "${FLATPAK_DEST}/bin"
-      # Install custom host command wrapper
-      - install -m0755 Flatpak/host-run "${FLATPAK_DEST}/bin/host-run"
-      # Expose host `dolphin-emu` if available
-      - install -m0755 Flatpak/dolphin-emu "${FLATPAK_DEST}/bin/dolphin-emu"
-      # Expose host `flatpak` for Dolphin interaction
-      - install -m0755 Flatpak/flatpak "${FLATPAK_DEST}/bin/flatpak"
       # Install metadata files
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.desktop" "${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop"
       - install -D -m0644 "Flatpak/${FLATPAK_ID}-url-handler.desktop" "${FLATPAK_DEST}/share/applications/${FLATPAK_ID}-url-handler.desktop"
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.png" "${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/${FLATPAK_ID}.png"
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.metainfo.xml" "${FLATPAK_DEST}/share/metainfo/${FLATPAK_ID}.metainfo.xml"
+    sources:
+      - type: git
+        url: https://github.com/TeamWheelWizard/WheelWizard.git
+        commit: 5af3a5aad2fcfd3c4c91919c17f3ebe15c330a21
+      - ./nuget-sources.json
+
+  - name: dolphin-emu
+    buildsystem: cmake-ninja
+    build-options:
+      # Don't use any default flags provided by the SDK
+      cflags: ""
+      cflags-override: true
+      cxxflags: ""
+      cxxflags-override: true
+    builddir: true
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DENABLE_ALSA=OFF
+      - -DENABLE_SDL=ON
+      - -DENABLE_EVDEV=ON
+      - -DDISTRIBUTOR=Flathub
+      # Use the vendored-in SDL since the one from the SDK usually lags far behind
+      - -DUSE_SYSTEM_SDL3=OFF
+    post-install:
+      - install -Dm755 -t "${FLATPAK_DEST}/bin/" ../Flatpak/dolphin-emu-wrapper
+    cleanup:
+      - /share/icons
+      - /share/applications
+      - /share/man
+    sources:
+      - type: git
+        url: https://github.com/dolphin-emu/dolphin.git
+        tag: 2606a
+        commit: c77bbaa0f372c3f72281602a8b087206706542cb
+        x-checker-data:
+          type: json
+          url: https://dolphin-emu.org/update/latest/beta
+          tag-query: .shortrev
+          version-query: .shortrev
+          timestamp-query: .date
+      - type: patch
+        path: patches/dolphin-emu/dolphin-emu-wrapper.patch
+      - type: patch
+        path: patches/dolphin-emu/no-dirty-version.patch
