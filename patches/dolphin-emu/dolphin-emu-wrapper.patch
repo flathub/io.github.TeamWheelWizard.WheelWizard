@@ -1,18 +1,19 @@
 diff --git a/Flatpak/dolphin-emu-wrapper b/Flatpak/dolphin-emu-wrapper
-index be5f0e5108..21cee99a14 100755
+index be5f0e5108..266d46181f 100755
 --- a/Flatpak/dolphin-emu-wrapper
 +++ b/Flatpak/dolphin-emu-wrapper
-@@ -1,8 +1,8 @@
- #!/bin/sh
+@@ -3,6 +3,13 @@
+ # https://github.com/flathub/com.discordapp.Discord/wiki/Rich-Precense-(discord-rpc)#flatpak-applications
+ for i in {0..9}; do
+   test -S $XDG_RUNTIME_DIR/discord-ipc-$i || ln -sf {app/com.discordapp.Discord,$XDG_RUNTIME_DIR}/discord-ipc-$i;
++  # Do the same for Discord Canary as a fallback
++  test -S $XDG_RUNTIME_DIR/discord-ipc-$i || ln -sf {app/com.discordapp.DiscordCanary,$XDG_RUNTIME_DIR}/discord-ipc-$i;
+ done
  
--# https://github.com/flathub/com.discordapp.Discord/wiki/Rich-Precense-(discord-rpc)#flatpak-applications
--for i in {0..9}; do
--  test -S $XDG_RUNTIME_DIR/discord-ipc-$i || ln -sf {app/com.discordapp.Discord,$XDG_RUNTIME_DIR}/discord-ipc-$i;
--done
+-dolphin-emu "$@"
 +APP_ID="${FLATPAK_ID:-io.github.TeamWheelWizard.WheelWizard}"
 +export XDG_CACHE_HOME="$HOME/.var/app/${APP_ID}/cache-dolphin-emu"
 +export XDG_CONFIG_HOME="$HOME/.var/app/${APP_ID}/config-dolphin-emu"
 +export XDG_DATA_HOME="$HOME/.var/app/${APP_ID}/data-dolphin-emu"
- 
--dolphin-emu "$@"
++
 +env -u DOLPHIN_EMU_USERPATH /app/bin/dolphin-emu "$@"
