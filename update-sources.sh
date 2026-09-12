@@ -78,17 +78,17 @@ FREEDESKTOP_VERSION=$(
       # This tries to match the extension point that the KDE SDK inherits.
       !found && /^\[Extension org\.freedesktop\.Sdk\.Extension\]/ {
         found = 1
-  next
+        next
       }
 
       found {
         # Stop at the first blank line or line beginning with a `[`
-  if ($0 == "" || $0 ~ /^\[/) {
+        if ($0 == "" || $0 ~ /^\[/) {
           exit
         }
-  # Extract the required version number
-        if ($0 ~ /^version = /) {
-          sub(/^version = /, "")
+        # Extract the required version number
+        if ($0 ~ /^[[:space:]]*version[[:space:]]*=/) {
+          sub(/^[[:space:]]*version[[:space:]]*=[[:space:]]*/, "")
           print
           exit
         }

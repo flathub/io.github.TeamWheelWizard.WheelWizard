@@ -3,7 +3,7 @@ runtime: org.kde.Sdk
 runtime-version: '6.11'
 sdk: org.kde.Sdk
 separate-locales: false
-command: WheelWizard
+command: wheelwizard-wrapper
 
 sdk-extensions:
   - org.freedesktop.Sdk.Extension.dotnet10
@@ -31,7 +31,8 @@ finish-args:
   - --filesystem=~/.var/app/org.DolphinEmu.dolphin-emu/data/dolphin-emu:create
   # The following finish-args are from Dolphin...
   - --filesystem=xdg-run/app/com.discordapp.Discord:create
-  - --filesystem=xdg-run/discord-ipc-0:create
+  # Also consider Discord Canary
+  - --filesystem=xdg-run/app/com.discordapp.DiscordCanary:create
   # Required to disable the screensaver in various desktops
   - --talk-name=org.freedesktop.ScreenSaver
   - --talk-name=org.xfce.ScreenSaver
@@ -133,11 +134,27 @@ modules:
       - install -D -m0644 "Flatpak/${FLATPAK_ID}-url-handler.desktop" "${FLATPAK_DEST}/share/applications/${FLATPAK_ID}-url-handler.desktop"
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.png" "${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/${FLATPAK_ID}.png"
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.metainfo.xml" "${FLATPAK_DEST}/share/metainfo/${FLATPAK_ID}.metainfo.xml"
+    post-install:
+      - install -Dm755 -t "${FLATPAK_DEST}/bin/" wheelwizard-wrapper
     sources:
       - type: git
         url: https://github.com/TeamWheelWizard/WheelWizard.git
         commit: 5af3a5aad2fcfd3c4c91919c17f3ebe15c330a21
       - ./nuget-sources.json
+      - type: script
+        commands:
+          - >
+            for i in {0..9}; do
+              test -S $XDG_RUNTIME_DIR/discord-ipc-$i || ln -sf {app/com.discordapp.Discord,$XDG_RUNTIME_DIR}/discord-ipc-$i;
+              # Do the same for Discord Canary as a fallback
+              # (will only stick if available during startup)
+              test -S $XDG_RUNTIME_DIR/discord-ipc-$i || ln -sf {app/com.discordapp.DiscordCanary,$XDG_RUNTIME_DIR}/discord-ipc-$i;
+              # Make any dangling links use the stable Discord though
+              test -S $XDG_RUNTIME_DIR/discord-ipc-$i || ln -sf {app/com.discordapp.Discord,$XDG_RUNTIME_DIR}/discord-ipc-$i;
+            done
+
+            exec WheelWizard "$@"
+        dest-filename: wheelwizard-wrapper
 
   - name: dolphin-emu
     buildsystem: cmake-ninja
