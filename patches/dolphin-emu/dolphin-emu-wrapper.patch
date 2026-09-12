@@ -1,13 +1,16 @@
 diff --git a/Flatpak/dolphin-emu-wrapper b/Flatpak/dolphin-emu-wrapper
-index be5f0e5108..266d46181f 100755
+index be5f0e5108..0cbd3c99df 100755
 --- a/Flatpak/dolphin-emu-wrapper
 +++ b/Flatpak/dolphin-emu-wrapper
-@@ -3,6 +3,13 @@
+@@ -3,6 +3,16 @@
  # https://github.com/flathub/com.discordapp.Discord/wiki/Rich-Precense-(discord-rpc)#flatpak-applications
  for i in {0..9}; do
    test -S $XDG_RUNTIME_DIR/discord-ipc-$i || ln -sf {app/com.discordapp.Discord,$XDG_RUNTIME_DIR}/discord-ipc-$i;
 +  # Do the same for Discord Canary as a fallback
++  # (will only stick if available during startup)
 +  test -S $XDG_RUNTIME_DIR/discord-ipc-$i || ln -sf {app/com.discordapp.DiscordCanary,$XDG_RUNTIME_DIR}/discord-ipc-$i;
++  # Make any dangling links use the stable Discord though
++  test -S $XDG_RUNTIME_DIR/discord-ipc-$i || ln -sf {app/com.discordapp.Discord,$XDG_RUNTIME_DIR}/discord-ipc-$i;
  done
  
 -dolphin-emu "$@"
