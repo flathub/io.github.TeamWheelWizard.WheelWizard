@@ -2,8 +2,9 @@
 
 This is the Flatpak build repository for Wheel Wizard.
 Wheel Wizard is a convenient Mario Kart Wii mod manager and launcher,
-purpose-built for the Retro Rewind custom track distribution
-with several online features.
+designed for the Retro Rewind custom track distribution.
+It includes several online features and supports running the game through
+either the Dolphin Emulator or Wiicompiled.
 
 ## Updating the sources
 

@@ -132,14 +132,15 @@ modules:
       # Install metadata files
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.desktop" "${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop"
       - install -D -m0644 "Flatpak/${FLATPAK_ID}-url-handler.desktop" "${FLATPAK_DEST}/share/applications/${FLATPAK_ID}-url-handler.desktop"
-      - install -D -m0644 "Flatpak/${FLATPAK_ID}.png" "${FLATPAK_DEST}/share/icons/hicolor/256x256/apps/${FLATPAK_ID}.png"
+      - install -D -m0644 "Flatpak/${FLATPAK_ID}.svg" "${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg"
+      - install -D -m0644 "Flatpak/${FLATPAK_ID}.png" "${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/${FLATPAK_ID}.png"
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.metainfo.xml" "${FLATPAK_DEST}/share/metainfo/${FLATPAK_ID}.metainfo.xml"
     post-install:
       - install -Dm755 -t "${FLATPAK_DEST}/bin/" wheelwizard-wrapper
     sources:
       - type: git
         url: https://github.com/TeamWheelWizard/WheelWizard.git
-        commit: 5af3a5aad2fcfd3c4c91919c17f3ebe15c330a21
+        commit: af75a623ae61a0c091ed6e2de5bee647c8c120c7
       - ./nuget-sources.json
       - type: script
         commands:
