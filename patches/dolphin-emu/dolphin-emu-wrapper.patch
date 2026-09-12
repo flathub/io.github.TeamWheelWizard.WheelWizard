@@ -1,5 +1,5 @@
 diff --git a/Flatpak/dolphin-emu-wrapper b/Flatpak/dolphin-emu-wrapper
-index be5f0e5108..0cbd3c99df 100755
+index be5f0e5108..6d71593b16 100755
 --- a/Flatpak/dolphin-emu-wrapper
 +++ b/Flatpak/dolphin-emu-wrapper
 @@ -3,6 +3,16 @@
@@ -19,4 +19,4 @@ index be5f0e5108..0cbd3c99df 100755
 +export XDG_CONFIG_HOME="$HOME/.var/app/${APP_ID}/config-dolphin-emu"
 +export XDG_DATA_HOME="$HOME/.var/app/${APP_ID}/data-dolphin-emu"
 +
-+env -u DOLPHIN_EMU_USERPATH /app/bin/dolphin-emu "$@"
++/usr/bin/env -u DOLPHIN_EMU_USERPATH /app/bin/dolphin-emu "$@"
