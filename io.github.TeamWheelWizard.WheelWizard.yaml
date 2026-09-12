@@ -31,7 +31,6 @@ finish-args:
   - --filesystem=~/.var/app/org.DolphinEmu.dolphin-emu/data/dolphin-emu:create
   # The following finish-args are from Dolphin...
   - --filesystem=xdg-run/app/com.discordapp.Discord:create
-  - --filesystem=xdg-run/discord-ipc-0:create
   # Required to disable the screensaver in various desktops
   - --talk-name=org.freedesktop.ScreenSaver
   - --talk-name=org.xfce.ScreenSaver
