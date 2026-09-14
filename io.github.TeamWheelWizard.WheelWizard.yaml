@@ -10,9 +10,7 @@ sdk-extensions:
 
 finish-args:
   #- --device=dri
-  # TODO: Replace this with wayland and fallback-x11 once Wayland support
-  #       becomes available:
-  #       https://github.com/AvaloniaUI/Avalonia/pull/8003
+  # WheelWizard supports Wayland, but Dolphin currently does not
   - --socket=x11
   - --share=ipc
   - --env=DOTNET_ROOT=/app/lib/dotnet
@@ -30,9 +28,9 @@ finish-args:
   # To have access to the directories from the start for Flatpak Dolphin
   - --filesystem=~/.var/app/org.DolphinEmu.dolphin-emu/config/dolphin-emu:create
   - --filesystem=~/.var/app/org.DolphinEmu.dolphin-emu/data/dolphin-emu:create
-  # The following finish-args are from Dolphin...
+  # Discord Rich Presence
   - --filesystem=xdg-run/app/com.discordapp.Discord:create
-  # Also consider Discord Canary
+  - --filesystem=xdg-run/discord-ipc-0
   - --filesystem=xdg-run/app/com.discordapp.DiscordCanary:create
   # Required to disable the screensaver in various desktops
   - --talk-name=org.freedesktop.ScreenSaver
@@ -40,6 +38,8 @@ finish-args:
   - --talk-name=org.mate.ScreenSaver
   # Required for Gamescope on Steam Deck
   - --filesystem=xdg-run/gamescope-0:ro
+  # Optional, but required for music attenuation support on WiiCompiled
+  - --talk-name=org.mpris.MediaPlayer2.*
 
 cleanup-commands:
   - >
