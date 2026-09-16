@@ -1,12 +1,29 @@
 id: io.github.TeamWheelWizard.WheelWizard
-runtime: org.kde.Sdk
+runtime: org.kde.Platform
 runtime-version: '6.11'
 sdk: org.kde.Sdk
 separate-locales: false
 command: wheelwizard-wrapper
 
 sdk-extensions:
+  - org.freedesktop.Sdk.Extension.dotnet8
   - org.freedesktop.Sdk.Extension.dotnet10
+  - org.freedesktop.Sdk.Extension.llvm22
+  - org.freedesktop.Sdk.Extension.rust-stable
+
+add-extensions:
+  io.github.TeamWheelWizard.WheelWizard.Backend.DolphinEmu:
+    directory: extensions/backends/dolphin-emu
+    add-ld-path: lib
+    bundle: true
+    no-autodownload: false
+    autodelete: true
+  io.github.TeamWheelWizard.WheelWizard.Backend.Wiicompiled:
+    directory: extensions/backends/wiicompiled
+    add-ld-path: lib
+    bundle: true
+    no-autodownload: false
+    autodelete: true
 
 finish-args:
   # WheelWizard supports Wayland, but Dolphin currently does not
@@ -14,6 +31,8 @@ finish-args:
   - --share=ipc
   - --env=DOTNET_ROOT=/app/lib/dotnet
   - --env=DOTNET_CLI_TELEMETRY_OPTOUT=true
+  - --env=DOTNET_EnableDiagnostics=0
+  - --env=DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0
   - --share=network
   - --allow=bluetooth
   - --device=all
@@ -39,96 +58,137 @@ finish-args:
   #- --talk-name=org.mpris.MediaPlayer2.*
 
 cleanup-commands:
-  - >
-    find "${FLATPAK_DEST}/bin/runtimes"
-    -mindepth 1
-    -maxdepth 1
-    -not -name "$RUNTIME"
-    -exec rm -rf {} +
+  # Remove broken symlinks
+  - >-
+    find "${FLATPAK_DEST}"
+    -xtype l
+    -delete
+  # Ensure extension points exist
+  - mkdir -p "${FLATPAK_DEST}/extensions/backends/"{dolphin-emu,wiicompiled}
 
 build-options:
-  prepend-path: '/usr/lib/sdk/dotnet10/bin'
-  append-ld-library-path: '/usr/lib/sdk/dotnet10/lib'
-  prepend-pkg-config-path: '/usr/lib/sdk/dotnet10/lib/pkgconfig'
   env:
     DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
-  arch:
-    aarch64:
-      env:
-        RUNTIME: 'linux-arm64'
-    x86_64:
-      env:
-        RUNTIME: 'linux-x64'
+    DOTNET_REPRODUCIBLE_FLAGS: >-
+      -p:ContinuousIntegrationBuild=true
+      -p:Deterministic=true
+      -p:DeterministicSourcePaths=true
+      -p:DebugType=embedded
+      -p:EnableSourceLink=false
+      -p:EmbedAllSources=true
+      -p:EmbedUntrackedSources=true
+      -p:PublishRepositoryUrl=false
+      -p:RepositoryUrl=
+      -p:RepositoryBranch=
+      -p:SourceBranchName=
+      -p:SourceRevisionId=
+      -p:IncludeSourceRevisionInInformationalVersion=false
 
 modules:
-  # Enables motion controls on non-wii controllers (switch, ps4, etc)
-  # Requires a udev rule enabling Motion Sensors access
-  - name: libevdev
-    buildsystem: meson
+  - name: dolphin-emu
+    buildsystem: cmake-ninja
+    build-options:
+      # Don't use any default flags provided by the SDK
+      cflags: ""
+      cflags-override: true
+      cxxflags: ""
+      cxxflags-override: true
+      append-ld-library-path: '/app/extensions/backends/dolphin-emu/lib'
+      prepend-pkg-config-path: '/app/extensions/backends/dolphin-emu/lib/pkgconfig'
+    builddir: true
     config-opts:
-      - -Dtests=disabled
-      - -Ddocumentation=disabled
-    cleanup:
-      - /share/man
-    sources:
-      - type: archive
-        url: https://www.freedesktop.org/software/libevdev/libevdev-1.13.7.tar.xz
-        sha256: 0caf824971108f15bb2ad356433bae198d7d3bf1e82d43f63626e069e060bfa6
-        x-checker-data:
-          type: anitya
-          project-id: 20540
-          url-template: https://www.freedesktop.org/software/libevdev/libevdev-$version.tar.xz
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCMAKE_INSTALL_PREFIX=/app/extensions/backends/dolphin-emu
+      - -DENABLE_ALSA=OFF
+      - -DENABLE_SDL=ON
+      - -DENABLE_EVDEV=ON
+      - -DDISTRIBUTOR=Flathub
+      # Use the vendored-in SDL since the one from the SDK usually lags far behind
+      - -DUSE_SYSTEM_SDL3=OFF
+    post-install:
+      # Install `dolphin-emu` and `libevdev` license files
+      - |
+        set -eux
 
-  - name: libxml2-legacy
-    buildsystem: autotools
-    config-opts:
-      - --with-python=no
-    cleanup:
-      - /share/aclocal
-      - /share/doc
-      - /share/gtk-doc
-      - /share/man
-    sources:
-      - type: archive
-        url: https://download.gnome.org/sources/libxml2/2.13/libxml2-2.13.9.tar.xz
-        sha256: a2c9ae7b770da34860050c309f903221c67830c86e4a7e760692b803df95143a
-        x-checker-data:
-          type: gnome
-          name: libxml2
-          versions:
-            <: 2.14.0
+        LICENSE_DIR="${FLATPAK_DEST}/extensions/backends/dolphin-emu/share/licenses/${FLATPAK_ID}.Backend.DolphinEmu"
 
-  - name: dotnet
-    buildsystem: simple
-    build-commands:
-    - /usr/lib/sdk/dotnet10/bin/install.sh
+        mkdir -p "${LICENSE_DIR}"
+
+        mv \
+          "${FLATPAK_DEST}/share/licenses/${FLATPAK_ID}"/{dolphin-emu,libevdev} \
+          "${LICENSE_DIR}/"
+      - install -D -m0755 -t "${FLATPAK_DEST}/extensions/backends/dolphin-emu/bin/" ../Flatpak/dolphin-emu-wrapper
+      - install -D -m0644 -t "${FLATPAK_DEST}/extensions/backends/dolphin-emu/share/metainfo" "../${FLATPAK_ID}.Backend.DolphinEmu.metainfo.xml"
+    cleanup:
+      - /extensions/backends/dolphin-emu/share/icons
+      - /extensions/backends/dolphin-emu/share/applications
+      - /extensions/backends/dolphin-emu/share/man
+    sources:
+      - ./sources/dolphin-emu/dolphin-emu.yaml
+      - type: patch
+        path: patches/dolphin-emu/dolphin-emu-wrapper.patch
+      - type: patch
+        path: patches/dolphin-emu/no-dirty-version.patch
+      - type: file
+        path: io.github.TeamWheelWizard.WheelWizard.Backend.DolphinEmu.metainfo.xml
+    modules:
+      # Enables motion controls on non-wii controllers (switch, ps4, etc)
+      # Requires a udev rule enabling Motion Sensors access
+      - name: libevdev
+        buildsystem: meson
+        config-opts:
+          - --prefix=/app/extensions/backends/dolphin-emu
+          - --libdir=/app/extensions/backends/dolphin-emu/lib
+          - -Dtests=disabled
+          - -Ddocumentation=disabled
+        cleanup:
+          - /extensions/backends/dolphin-emu/share/man
+        sources:
+          - type: archive
+            url: https://www.freedesktop.org/software/libevdev/libevdev-1.13.7.tar.xz
+            sha256: 0caf824971108f15bb2ad356433bae198d7d3bf1e82d43f63626e069e060bfa6
+            x-checker-data:
+              type: anitya
+              project-id: 20540
+              url-template: https://www.freedesktop.org/software/libevdev/libevdev-$version.tar.xz
 
   - name: WheelWizard
     buildsystem: simple
+    build-options:
+      prepend-path: '/usr/lib/sdk/dotnet10/bin'
+      append-ld-library-path: '/usr/lib/sdk/dotnet10/lib'
+      prepend-pkg-config-path: '/usr/lib/sdk/dotnet10/lib/pkgconfig'
+      arch:
+        aarch64:
+          env:
+            RUNTIME: 'linux-arm64'
+        x86_64:
+          env:
+            RUNTIME: 'linux-x64'
     build-commands:
-      - >
+      - >-
         DOTNET_CLI_TELEMETRY_OPTOUT=true dotnet
         publish
         WheelWizard/WheelWizard.csproj
-        -p:ContinuousIntegrationBuild=true
-        -p:Deterministic=true
-        -p:DeterministicSourcePaths=true
-        -p:DebugType=embedded
-        -p:EnableSourceLink=false
-        -p:EmbedAllSources=true
-        -p:EmbedUntrackedSources=true
-        -p:PublishRepositoryUrl=false
-        -p:RepositoryUrl=
-        -p:RepositoryBranch=
-        -p:SourceBranchName=
-        -p:SourceRevisionId=
-        -p:IncludeSourceRevisionInInformationalVersion=false
+        ${DOTNET_REPRODUCIBLE_FLAGS}
         -c Release
+        -m:"${FLATPAK_BUILDER_N_JOBS}"
         --source ./nuget-sources
         --source /usr/lib/sdk/dotnet10/nuget/packages
         --no-self-contained
-      - mkdir -p "${FLATPAK_DEST}/bin"
-      - cp -r --remove-destination WheelWizard/bin/Release/net*/publish/* "${FLATPAK_DEST}/bin"
+      - mkdir -p "${FLATPAK_DEST}"/{bin,lib/wheelwizard}
+      - cp -r --remove-destination WheelWizard/bin/Release/net*/publish/* "${FLATPAK_DEST}/lib/wheelwizard"
+      - ln -s ../lib/wheelwizard/WheelWizard "${FLATPAK_DEST}/bin/WheelWizard"
+      # Clean up unused runtime libraries
+      - >-
+        find "${FLATPAK_DEST}/lib/wheelwizard/runtimes"
+        -mindepth 1
+        -maxdepth 1
+        -not -name "$RUNTIME"
+        -exec rm -rf {} +
+      # No need for bin/dotnet
+      - mkdir -p "${FLATPAK_DEST}/lib/dotnet"
+      - cp -r /usr/lib/sdk/dotnet10/lib/{dotnet,host,shared} "${FLATPAK_DEST}/lib/dotnet"
       # Install metadata files
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.desktop" "${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop"
       - install -D -m0644 "Flatpak/${FLATPAK_ID}-url-handler.desktop" "${FLATPAK_DEST}/share/applications/${FLATPAK_ID}-url-handler.desktop"
@@ -136,15 +196,15 @@ modules:
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.png" "${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/${FLATPAK_ID}.png"
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.metainfo.xml" "${FLATPAK_DEST}/share/metainfo/${FLATPAK_ID}.metainfo.xml"
     post-install:
-      - install -Dm755 -t "${FLATPAK_DEST}/bin/" wheelwizard-wrapper
+      - install -D -m0755 -t "${FLATPAK_DEST}/bin/" wheelwizard-wrapper
     sources:
-      - type: git
-        url: https://github.com/TeamWheelWizard/WheelWizard.git
-        commit: 881f04b9dfefb408e18ab2c6573763f1d5115d4a
-      - ./nuget-sources.json
+      - ./sources/WheelWizard/WheelWizard.yaml
+      - type: patch
+        path: patches/WheelWizard/wiicompiled-extension.patch
+      - ./sources/WheelWizard/nuget/wheelwizard-nuget-sources.json
       - type: script
         commands:
-          - >
+          - >-
             for i in {0..9}; do
               test -S $XDG_RUNTIME_DIR/discord-ipc-$i || ln -sf {app/com.discordapp.Discord,$XDG_RUNTIME_DIR}/discord-ipc-$i;
               # Do the same for Discord Canary as a fallback
@@ -154,44 +214,392 @@ modules:
               test -S $XDG_RUNTIME_DIR/discord-ipc-$i || ln -sf {app/com.discordapp.Discord,$XDG_RUNTIME_DIR}/discord-ipc-$i;
             done
 
-            exec WheelWizard "$@"
+            export DOTNET_ROOT=/app/lib/dotnet
+
+            exec /app/bin/WheelWizard "$@"
         dest-filename: wheelwizard-wrapper
 
-  - name: dolphin-emu
-    buildsystem: cmake-ninja
+  - name: Wiicompiled
+    buildsystem: simple
     build-options:
-      # Don't use any default flags provided by the SDK
-      cflags: ""
-      cflags-override: true
-      cxxflags: ""
-      cxxflags-override: true
-    builddir: true
-    config-opts:
-      - -DCMAKE_BUILD_TYPE=Release
-      - -DENABLE_ALSA=OFF
-      - -DENABLE_SDL=ON
-      - -DENABLE_EVDEV=ON
-      - -DDISTRIBUTOR=Flathub
-      # Use the vendored-in SDL since the one from the SDK usually lags far behind
-      - -DUSE_SYSTEM_SDL3=OFF
+      prepend-path: '/usr/lib/sdk/dotnet8/bin'
+      append-path: '/usr/lib/sdk/rust-stable/bin'
+      append-ld-library-path: '/usr/lib/sdk/dotnet8/lib'
+      prepend-pkg-config-path: '/usr/lib/sdk/dotnet8/lib/pkgconfig'
+      env:
+        CARGO_HOME: '/run/build/Wiicompiled/cargo'
+        CARGO_NET_OFFLINE: 'true'
+        DAWN_CMAKE_FLAGS: >-
+          -DDAWN_BUILD_MONOLITHIC_LIBRARY=STATIC
+          -DDAWN_FETCH_DEPENDENCIES=OFF
+          -DDAWN_ENABLE_INSTALL=ON
+          -DDAWN_BUILD_BENCHMARKS=OFF
+          -DDAWN_BUILD_PROTOBUF=OFF
+          -DDAWN_BUILD_SAMPLES=OFF
+          -DTINT_BUILD_CMD_TOOLS=OFF
+          -DTINT_BUILD_IR_BINARY=OFF
+          -DTINT_BUILD_TESTS=OFF
+          -DDAWN_ENABLE_D3D12=OFF
+          -DDAWN_ENABLE_D3D11=OFF
+          -DDAWN_ENABLE_METAL=OFF
+          -DDAWN_ENABLE_DESKTOP_GL=OFF
+          -DDAWN_ENABLE_NULL=OFF
+          -DDAWN_ENABLE_OPENGLES=OFF
+          -DDAWN_ENABLE_VULKAN=ON
+          -DDAWN_SUPPORTS_GLFW_FOR_WINDOWING=OFF
+          -DDAWN_USE_GLFW=OFF
+          -DDAWN_USE_WAYLAND=ON
+          -DDAWN_USE_X11=ON
+        RUSTFLAGS: '-C link-arg=-fuse-ld=mold'
+    subdir: 'Wiicompiled'
+    build-commands:
+      - mkdir -p "${FLATPAK_DEST}/extensions/backends/wiicompiled"
+      # Set up the sysroot
+      - |
+        mkdir -p "${FLATPAK_DEST}/extensions/backends/wiicompiled/sysroot/usr"
+
+        for target in bin include lib share; do
+          mkdir -p "${FLATPAK_DEST}/extensions/backends/wiicompiled/$target"
+          ln -s "../../$target" "${FLATPAK_DEST}/extensions/backends/wiicompiled/sysroot/usr/$target"
+        done
+
+        ln -s usr/bin "${FLATPAK_DEST}/extensions/backends/wiicompiled/sysroot/bin"
+        ln -s usr/lib "${FLATPAK_DEST}/extensions/backends/wiicompiled/sysroot/lib"
+        ln -s usr/lib "${FLATPAK_DEST}/extensions/backends/wiicompiled/sysroot/lib64"
+      # Populate the sysroot with required headers, libraries, other runtime objects,
+      # and the minimal LLVM toolchain installation
+      - |
+        set -euxo pipefail
+
+        SYSROOT="${FLATPAK_DEST}/extensions/backends/wiicompiled/sysroot"
+
+        find_file() {
+          "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/clang" --sysroot=/ --print-file-name="$1"
+        }
+
+        copy_files() {
+          for source in "$@"; do
+            destination_source_part="${source#"${STRIP_DESTINATION_PREFIX_PATTERN:-}"}"
+            destination="${SYSROOT}/${destination_source_part#/}"
+            mkdir -p "$(dirname "$destination")"
+            cp -a "$source" "$destination"
+
+            if [ -L "$source" ]; then
+              symlink_target=$(readlink -e "$source") || {
+                echo "Missing symlink destination for: '$source'"
+                return 1
+              }
+              (copy_files "$symlink_target") || return 1
+            fi
+          done
+        }
+
+        # Install the LLVM toolchain
+        mkdir -p "${SYSROOT}/lib"
+        find \
+          /usr/lib/sdk/llvm22/lib \
+          -mindepth 1 \
+          -maxdepth 1 \
+          '!' -name '*libear*' \
+          '!' -name '*lldb*' \
+          '!' -name '*scanbuild*' \
+          '!' -name '*python*' \
+          -exec cp -a {} "${SYSROOT}/lib/" \;
+        mkdir -p "${SYSROOT}/bin"
+        (STRIP_DESTINATION_PREFIX_PATTERN=/usr/lib/sdk/llvm22/ copy_files /usr/lib/sdk/llvm22/bin/{clang{,++},*lld,llvm-{ar,ranlib}})
+
+        # Find the target triples using `clang`
+        TARGET_TRIPLE="$("${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/clang" -print-target-triple)"
+        SHORT_TARGET_TRIPLE="$(printf '%s\n' "$TARGET_TRIPLE" | sed 's/-unknown-/-/')"
+        if [ -z "$TARGET_TRIPLE" ] || [ -z "$SHORT_TARGET_TRIPLE" ]; then
+          echo 'Could not determine the target triple'
+          exit 1
+        fi
+
+        # Prepare required sysroot headers and low-level libraries
+        mkdir -p "${SYSROOT}/usr/include"
+        cp -a /usr/include/. "${SYSROOT}/usr/include/"
+        mkdir -p "${SYSROOT}/usr/lib/${SHORT_TARGET_TRIPLE}/include"
+        cp -a /usr/lib/${SHORT_TARGET_TRIPLE}/include/. "${SYSROOT}/usr/lib/${SHORT_TARGET_TRIPLE}/include/"
+        # Copy the low-level GCC runtime library, including `libgcc.a` and runtime object files.
+        mkdir -p "${SYSROOT}/usr/lib/gcc"
+        cp -a "/usr/lib/gcc/${TARGET_TRIPLE}" "${SYSROOT}/usr/lib/gcc/"
+
+        # Copy libc/libstdc++ shared libraries and static library archives
+        # alongside required runtime object files. Some essential `.so` files are copied
+        # due to them not being provided as static archives (math library, zlib).
+        # NOTE: With code not statically linking `libgcc.a`, and `libgcc_s.so`
+        # not being part of the `/usr/lib/gcc` tree, `libgcc_s.so` also has to be copied over separately.
+        for name in \
+          "/usr/lib/${SHORT_TARGET_TRIPLE}"/*.o \
+          libdl.a \
+          libpthread.a \
+          librt.a \
+          libutil.a \
+          libanl.a \
+          libm.so \
+          libmvec.so \
+          libz.so \
+          libgcc_s.so \
+          libstdc++.so \
+          libstdc++.a \
+          libstdc++.modules.json \
+          libc.so \
+          libc_nonshared.a \
+          libc.a
+        do
+          source="$(find_file "$name")"
+          if [ -z "$source" ] || { [ ! -e "$source" ] && [ ! -L "$source" ]; }; then
+            echo "Could not find '$source' using `clang`"
+            exit 1
+          fi
+          copy_files "$source"*
+        done
+
+        # Parse the libc linker script we copied earlier to make sure
+        # we have any additionally referenced libraries (such as the dynamic loader).
+        libc="$(find_file libc.so)"
+        grep -E '^[[:space:]]*GROUP[[:space:]]*\(' "$libc" |
+          grep -oE '/[^[:space:]]+' |
+          while IFS= read -r lib; do
+            copy_files "$lib"
+          done
+      # Install toolchain license files
+      - |
+        set -eux
+
+        LICENSE_DIR="${FLATPAK_DEST}/extensions/backends/wiicompiled/share/licenses/${FLATPAK_ID}.Backend.Wiicompiled"
+
+        mkdir -p "${LICENSE_DIR}"
+        # Dereference common license symlinks due to them being
+        # broken absolute symlinks otherwise.
+        cp -aL \
+          /usr/lib/sdk/llvm22/share/licenses/. \
+          /usr/share/licenses/freedesktop-sdk \
+          "${LICENSE_DIR}/"
+      # Export this build environment's relevant environment variables
+      # so the same environment can be sourced by the app when building the full game.
+      - |
+        python3 - <<'PY'
+        import os
+        import shlex
+
+        flatpak_dest = os.environ.get("FLATPAK_DEST", "/app")
+
+        names = [
+          "CFLAGS", "CXXFLAGS", "CPPFLAGS", "LDFLAGS", "LC_ALL",
+        ]
+
+        with open("../build-env.sh", "w") as f:
+          for name in names:
+            if name in os.environ:
+              value = os.environ[name].replace(flatpak_dest, f"{flatpak_dest}/extensions/backends/wiicompiled")
+              f.write(f"export {name}={shlex.quote(value)}\n")
+        PY
+      - install -D -m0644 ../build-env.sh "${FLATPAK_DEST}/extensions/backends/wiicompiled/share/wiicompiled/build-env.sh"
+      # Install `cmake` and `ninja`
+      - mkdir -p "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin"
+      - cp -aL "$(which cmake)" "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/cmake"
+      - cp -a /usr/share/cmake* "${FLATPAK_DEST}/extensions/backends/wiicompiled/share/"
+      - cp -aL "$(which ninja)" "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/ninja"
+      # Build and install the required `nodtool` binary
+      - >-
+        cargo
+        fetch
+        --frozen
+        --manifest-path ../nod/nodtool/Cargo.toml
+      - >-
+        cargo
+        install
+        --frozen
+        --path ../nod/nodtool
+        --bin nodtool
+        --profile release-lto
+        --features default
+        --root "${FLATPAK_DEST}/extensions/backends/wiicompiled"
+        --jobs "${FLATPAK_BUILDER_N_JOBS}"
+      # Install the `nodtool` license
+      - >-
+        install
+        -D
+        -m0644
+        -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/share/licenses/${FLATPAK_ID}.Backend.Wiicompiled/nod"
+        ../nod/LICENSE-{APACHE,MIT}
+      # Build the required Wiicompiled setup program
+      - |
+        ADDITIONAL_NUGET_SOURCE=
+        MAYBE_EMPTY_NUGET_SOURCE='--source ../wiicompiled-setup-nuget-sources'
+        #ADDITIONAL_NUGET_SOURCE="$MAYBE_EMPTY_NUGET_SOURCE"
+
+        DOTNET_CLI_TELEMETRY_OPTOUT=true dotnet \
+          publish \
+          Launcher/WiiCompiled.Setup.Linux/WiiCompiled.Setup.Linux.csproj \
+          ${DOTNET_REPRODUCIBLE_FLAGS} \
+          -c Release \
+          -m:"${FLATPAK_BUILDER_N_JOBS}" \
+          ${ADDITIONAL_NUGET_SOURCE} \
+          --source /usr/lib/sdk/dotnet8/nuget/packages \
+          --no-self-contained
+      - mkdir -p "${FLATPAK_DEST}"/extensions/backends/wiicompiled/{bin,lib/wiicompiled-setup}
+      - cp -r --remove-destination Launcher/WiiCompiled.Setup.Linux/bin/Release/net*/publish/* "${FLATPAK_DEST}/extensions/backends/wiicompiled/lib/wiicompiled-setup"
+      - ln -s ../lib/wiicompiled-setup/WiiCompiled.Setup.Linux "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/wiicompiled-setup"
+      # Build the required PowerPC static recompiler program
+      - >-
+        DOTNET_CLI_TELEMETRY_OPTOUT=true dotnet
+        publish
+        translator/src/Translator.Cli/Translator.Cli.csproj
+        ${DOTNET_REPRODUCIBLE_FLAGS}
+        -c Release
+        -m:"${FLATPAK_BUILDER_N_JOBS}"
+        --source ../translator-nuget-sources
+        --source /usr/lib/sdk/dotnet8/nuget/packages
+        --no-self-contained
+      - mkdir -p "${FLATPAK_DEST}"/extensions/backends/wiicompiled/{bin,lib/translator}
+      - cp -r --remove-destination translator/src/Translator.Cli/bin/Release/net*/publish/* "${FLATPAK_DEST}/extensions/backends/wiicompiled/lib/translator"
+      - ln -s ../lib/translator/Translator.Cli "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/translator-cli"
+      # No need for bin/dotnet
+      - mkdir -p "${FLATPAK_DEST}/extensions/backends/wiicompiled/lib/dotnet"
+      - cp -r /usr/lib/sdk/dotnet8/lib/{dotnet,host,shared} "${FLATPAK_DEST}/extensions/backends/wiicompiled/lib/dotnet"
+      # Pre-build the required `dawn` dependency from source
+      - mkdir -p build/native-prebuilt-stage/_deps/dawn_prebuilt-src
+      - >-
+        cd ../dawn
+        &&
+        export PATH="${FLATPAK_DEST}/extensions/backends/wiicompiled/bin:$PATH"
+        &&
+        cmake -S . -B build -G Ninja
+        -DCMAKE_SYSROOT="${FLATPAK_DEST}/extensions/backends/wiicompiled/sysroot"
+        -DCMAKE_BUILD_TYPE=Release
+        -DCMAKE_INSTALL_PREFIX="$(realpath ../Wiicompiled/build/native-prebuilt-stage/_deps/dawn_prebuilt-src)"
+        -DCMAKE_C_COMPILER="${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/clang"
+        -DCMAKE_CXX_COMPILER="${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/clang++"
+        -DCMAKE_LINKER_TYPE=LLD
+        ${DAWN_CMAKE_FLAGS}
+        &&
+        cmake --build build --config Release --parallel "${FLATPAK_BUILDER_N_JOBS}"
+        &&
+        cmake --install build --config Release
+      # Pre-build remaining components which do not need a game file input
+      - >-
+        SOURCE_DATE_EPOCH=0 Launcher/Prepare-NativePrebuilt.sh
+        --arch "${FLATPAK_ARCH}"
+        --sysroot "${FLATPAK_DEST}/extensions/backends/wiicompiled/sysroot"
+        --llvm-dir "${FLATPAK_DEST}/extensions/backends/wiicompiled"
+        --cmake-bin "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/cmake"
+        --ninja-bin "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/ninja"
+        --parallel "${FLATPAK_BUILDER_N_JOBS}"
+        --stage-dir build/native-prebuilt-stage
+        --reuse-stage
+        --disconnected
+        --output-dir Launcher/artifacts/native-prebuilt
+      # Install the pre-built components to the extension
+      - >-
+        cp
+        -a
+        Launcher/artifacts/native-prebuilt/.
+        "${FLATPAK_DEST}/extensions/backends/wiicompiled/"
+      # Install the build script which can finish the build given the required game files
+      - mkdir -p "${FLATPAK_DEST}/extensions/backends/wiicompiled/workspace/Launcher/"
+      - cp Launcher/local-build.sh "${FLATPAK_DEST}/extensions/backends/wiicompiled/workspace/Launcher/"
+      # Install the Wiicompiled code workspace
+      - |
+        for dir in runtime aurora-main projects; do
+          # Will be cleaned up later in cleanup-commands
+          cp -r "./$dir" "${FLATPAK_DEST}/extensions/backends/wiicompiled/workspace/$dir"
+        done
+      # Clean up the workspace
+      - >-
+        find
+        "${FLATPAK_DEST}/extensions/backends/wiicompiled/workspace/aurora-main/extern"
+        -mindepth 1
+        -maxdepth 1
+        -type d
+        -exec rm -rf {} +
+      - rm -rf "${FLATPAK_DEST}/extensions/backends/wiicompiled/workspace/runtime/build"
+      # Save the Wiicompiled revision/version this is based on
+      - |
+        if git rev-parse HEAD >/dev/null 2>&1; then
+          version="$(git rev-parse HEAD)"
+        else
+          exit 1
+        fi
+        echo "$version" > "${FLATPAK_DEST}/extensions/backends/wiicompiled/workspace/.bundle-version"
+      # Install the Wiicompiled license
+      - >-
+        install
+        -D
+        -m0644
+        -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/share/licenses/${FLATPAK_ID}.Backend.Wiicompiled/wiicompiled"
+        LICENSE
+        THIRD-PARTY-NOTICES.md
     post-install:
-      - install -Dm755 -t "${FLATPAK_DEST}/bin/" ../Flatpak/dolphin-emu-wrapper
-    cleanup:
-      - /share/icons
-      - /share/applications
-      - /share/man
+      - install -D -m0755 -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/" ../wiicompiled-setup
+      - install -D -m0755 -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/" ../translator-cli
+      - install -D -m0644 -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/share/metainfo" "../${FLATPAK_ID}.Backend.Wiicompiled.metainfo.xml"
     sources:
-      - type: git
-        url: https://github.com/dolphin-emu/dolphin.git
-        tag: '2609'
-        commit: f84df02055ab9610feec48e65648cac5a3c098fa
-        x-checker-data:
-          type: json
-          url: https://dolphin-emu.org/update/latest/beta
-          tag-query: .shortrev
-          version-query: .shortrev
-          timestamp-query: .date
+      - ./sources/Wiicompiled/nod.yaml
+      - ./sources/Wiicompiled/cargo/nodtool-cargo-sources.json
+      - ./sources/Wiicompiled/Wiicompiled.yaml
+      # - ./sources/Wiicompiled/nuget/wiicompiled-setup-nuget-sources.json
+      - ./sources/Wiicompiled/nuget/translator-nuget-sources.json
+      - ./sources/Wiicompiled/cmake/native-prebuilt-sources.yaml
+      - ./sources/Wiicompiled/cmake/dawn-submodule-sources.yaml
       - type: patch
-        path: patches/dolphin-emu/dolphin-emu-wrapper.patch
-      - type: patch
-        path: patches/dolphin-emu/no-dirty-version.patch
+        paths:
+          - patches/Wiicompiled/native-prebuilt.patch
+        options:
+          - -d
+          - Wiicompiled
+      - type: script
+        commands:
+          - |
+            set -eu
+            WIICOMP_DIR='/app/extensions/backends/wiicompiled'
+            . "${WIICOMP_DIR}/share/wiicompiled/build-env.sh"
+            CACHE="${XDG_DATA_HOME:-$HOME/.var/app/${FLATPAK_ID}/data}/WiiCompiled/workspace"
+            mkdir -p "$CACHE"
+            if \
+              [ ! -f "$CACHE/.bundle-version" ] || \
+              [ "$(cat "${WIICOMP_DIR}/workspace/.bundle-version")" \
+                != "$(cat "$CACHE/.bundle-version")" ]
+            then
+              mkdir -p "$CACHE/Launcher"
+              for dir in runtime aurora-main projects; do
+                rm -rf "$CACHE/$dir"
+                cp -r "${WIICOMP_DIR}/workspace/$dir" "$CACHE/$dir"
+              done
+              cp "${WIICOMP_DIR}/workspace/Launcher/local-build.sh" \
+                "$CACHE/Launcher/"
+              cp "${WIICOMP_DIR}/workspace/.bundle-version" \
+                "$CACHE/"
+            fi
+
+            export DOTNET_ROOT="${WIICOMP_DIR}/lib/dotnet"
+
+            exec \
+              "${WIICOMP_DIR}/lib/wiicompiled-setup/WiiCompiled.Setup.Linux" \
+              --workspace "$CACHE" \
+              --translator-bin "${WIICOMP_DIR}/bin/translator-cli" \
+              --disc-tool-bin "${WIICOMP_DIR}/bin/nodtool" \
+              --cc "${WIICOMP_DIR}/bin/clang" \
+              --cxx "${WIICOMP_DIR}/bin/clang++" \
+              --fuse-ld lld \
+              --cmake "${WIICOMP_DIR}/bin/cmake" \
+              --ninja "${WIICOMP_DIR}/bin/ninja" \
+              --sysroot "${WIICOMP_DIR}/sysroot" \
+              --native-prebuilt-dir "${WIICOMP_DIR}" \
+              "$@"
+        dest-filename: wiicompiled-setup
+      - type: script
+        commands:
+          - >-
+            WIICOMP_DIR='/app/extensions/backends/wiicompiled'
+
+            export DOTNET_ROOT="${WIICOMP_DIR}/lib/dotnet"
+
+            exec "${WIICOMP_DIR}/lib/translator/Translator.Cli" "$@"
+        dest-filename: translator-cli
+      - type: file
+        path: io.github.TeamWheelWizard.WheelWizard.Backend.Wiicompiled.metainfo.xml
+    modules:
+      - ./modules/Wiicompiled/pip/dawn-jinja2-pip-module.yaml

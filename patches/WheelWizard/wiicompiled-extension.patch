@@ -1,0 +1,616 @@
+diff --git a/WheelWizard.Test/Features/Dolphin/DolphinPathResolverTests.cs b/WheelWizard.Test/Features/Dolphin/DolphinPathResolverTests.cs
+index 57fe08d8..38326b07 100644
+--- a/WheelWizard.Test/Features/Dolphin/DolphinPathResolverTests.cs
++++ b/WheelWizard.Test/Features/Dolphin/DolphinPathResolverTests.cs
+@@ -59,7 +59,7 @@ public class DolphinPathResolverTests
+             "/home/player/.var/app/org.example.DolphinFork/data/dolphin-emu"
+         );
+ 
+-        Assert.Equal("/app/bin/dolphin-emu-wrapper", paths.DolphinFilePath);
++        Assert.Equal("/app/extensions/backends/dolphin-emu/bin/dolphin-emu-wrapper", paths.DolphinFilePath);
+         Assert.Equal("/home/player/.var/app/org.example.DolphinFork/config/dolphin-emu", paths.ConfigFolderPath);
+         Assert.Contains(
+             "/home/player/.var/app/org.example.WheelWizard/data-dolphin-emu/dolphin-emu",
+diff --git a/WheelWizard.Test/Shared/Platform/EnvironmentDependencyTests.cs b/WheelWizard.Test/Shared/Platform/EnvironmentDependencyTests.cs
+index 4300d3b6..4ef42e5f 100644
+--- a/WheelWizard.Test/Shared/Platform/EnvironmentDependencyTests.cs
++++ b/WheelWizard.Test/Shared/Platform/EnvironmentDependencyTests.cs
+@@ -27,6 +27,57 @@ public class EnvironmentDependencyTests
+         Assert.Equal(expected, environment.IsFlatpakSandboxed(fs));
+     }
+ 
++    [Theory]
++    [InlineData(true, true, "io.example.App", false, true, false, true)]
++    [InlineData(true, false, "io.example.App", false, false, false, false)]
++    [InlineData(false, true, "io.example.App", false, false, false, false)]
++    [InlineData(false, false, "io.example.App", false, false, false, false)]
++    [InlineData(true, true, "io.example.App", true, false, false, true)]
++    [InlineData(true, false, "io.example.App", true, false, false, false)]
++    [InlineData(false, true, "io.example.App", true, false, false, false)]
++    [InlineData(false, false, "io.example.App", true, false, false, false)]
++    [InlineData(true, true, "io.example.App", false, true, true, false)]
++    [InlineData(true, false, "io.example.App", false, false, true, false)]
++    [InlineData(false, true, "io.example.App", false, false, true, false)]
++    [InlineData(false, false, "io.example.App", false, false, true, false)]
++    [InlineData(true, true, "io.example.App", true, false, true, false)]
++    [InlineData(true, false, "io.example.App", true, false, true, false)]
++    [InlineData(false, true, "io.example.App", true, false, true, false)]
++    [InlineData(false, false, "io.example.App", true, false, true, false)]
++    public void SandboxExtensions_RequiresDetectedSandboxAndSpecificRequiredExtensionProgram(
++        bool linux,
++        bool marker,
++        string appId,
++        bool hasDolphinExtensionFile,
++        bool expectsMissingDolphinExtension,
++        bool hasRecompExtensionFile,
++        bool expectsMissingRecompExtension
++    )
++    {
++        // Flatpak environment setup
++        var fs = new MockFileSystem(options => options.SimulatingOperatingSystem(SimulationMode.Linux));
++        if (marker)
++            fs.File.WriteAllText("/.flatpak-info", "sandbox");
++        var environment = Substitute.For<IRuntimeEnvironment>();
++        environment.IsLinux.Returns(linux);
++        environment.GetEnvironmentVariable("FLATPAK_ID").Returns(appId);
++
++        if (hasDolphinExtensionFile)
++        {
++            fs.Directory.CreateDirectory("/app/extensions/backends/dolphin-emu/bin/");
++            fs.File.WriteAllText("/app/extensions/backends/dolphin-emu/bin/dolphin-emu-wrapper", "#!/bin/sh\n");
++        }
++
++        if (hasRecompExtensionFile)
++        {
++            fs.Directory.CreateDirectory("/app/extensions/backends/wiicompiled/bin/");
++            fs.File.WriteAllText("/app/extensions/backends/wiicompiled/bin/wiicompiled-setup", "#!/bin/sh\n");
++        }
++
++        Assert.Equal(expectsMissingDolphinExtension, environment.IsMissingDolphinFlatpakExtension(fs));
++        Assert.Equal(expectsMissingRecompExtension, environment.IsMissingRecompFlatpakExtension(fs));
++    }
++
+     [Fact]
+     public void ShellQuoting_UsesTargetShellRules_ForApostrophesAndMetacharacters()
+     {
+diff --git a/WheelWizard/Features/CustomDistributions/RetroRewind.cs b/WheelWizard/Features/CustomDistributions/RetroRewind.cs
+index 21230c2c..98f8610d 100644
+--- a/WheelWizard/Features/CustomDistributions/RetroRewind.cs
++++ b/WheelWizard/Features/CustomDistributions/RetroRewind.cs
+@@ -567,6 +567,16 @@ public class RetroRewind : IDistribution
+ 
+     public async Task<OperationResult<WheelWizardStatus>> GetCurrentStatusAsync()
+     {
++        switch (_settingsManager.CheckExtensionConfiguration())
++        {
++            case ExtensionConfigurationInfo.MissingDolphin:
++                return WheelWizardStatus.NoDolphinExtension;
++            case ExtensionConfigurationInfo.MissingRecomp:
++                return WheelWizardStatus.NoRecompExtension;
++            case ExtensionConfigurationInfo.ExtensionFoundOrNotNeeded:
++                break;
++        }
++
+         if (!_settingsManager.PathsSetupCorrectly())
+             return WheelWizardStatus.ConfigNotFinished;
+ 
+diff --git a/WheelWizard/Features/CustomDistributions/RetroRewindBeta.cs b/WheelWizard/Features/CustomDistributions/RetroRewindBeta.cs
+index 27979fdd..80ea10f4 100644
+--- a/WheelWizard/Features/CustomDistributions/RetroRewindBeta.cs
++++ b/WheelWizard/Features/CustomDistributions/RetroRewindBeta.cs
+@@ -173,6 +173,16 @@ public class RetroRewindBeta : IDistribution
+ 
+     public Task<OperationResult<WheelWizardStatus>> GetCurrentStatusAsync()
+     {
++        switch (_settingsManager.CheckExtensionConfiguration())
++        {
++            case ExtensionConfigurationInfo.MissingDolphin:
++                return Task.FromResult(Ok(WheelWizardStatus.NoDolphinExtension));
++            case ExtensionConfigurationInfo.MissingRecomp:
++                return Task.FromResult(Ok(WheelWizardStatus.NoRecompExtension));
++            case ExtensionConfigurationInfo.ExtensionFoundOrNotNeeded:
++                break;
++        }
++
+         if (!_settingsManager.PathsSetupCorrectly())
+             return Task.FromResult(Ok(WheelWizardStatus.ConfigNotFinished));
+ 
+diff --git a/WheelWizard/Features/Dolphin/Discovery/DolphinDiscoveryService.cs b/WheelWizard/Features/Dolphin/Discovery/DolphinDiscoveryService.cs
+index d2367866..0fa70fed 100644
+--- a/WheelWizard/Features/Dolphin/Discovery/DolphinDiscoveryService.cs
++++ b/WheelWizard/Features/Dolphin/Discovery/DolphinDiscoveryService.cs
+@@ -17,6 +17,11 @@ public sealed class DolphinDiscoveryService(
+     IDolphinRegistrySettings registry
+ ) : IDolphinDiscoveryService
+ {
++    public bool IsMissingDolphinFlatpakExtension()
++    {
++        return environment.IsMissingDolphinFlatpakExtension(fileSystem);
++    }
++
+     public string? FindUserDirectory(string dolphinLocation, string currentUserDirectory)
+     {
+         var layout = paths.Resolve(dolphinLocation, currentUserDirectory);
+diff --git a/WheelWizard/Features/Dolphin/Paths/DolphinPathLayout.cs b/WheelWizard/Features/Dolphin/Paths/DolphinPathLayout.cs
+index 8536720d..6c67b83f 100644
+--- a/WheelWizard/Features/Dolphin/Paths/DolphinPathLayout.cs
++++ b/WheelWizard/Features/Dolphin/Paths/DolphinPathLayout.cs
+@@ -18,7 +18,7 @@ public sealed partial class DolphinPathLayout(
+     private string HomeFolderPath => environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
+     private string AppDataFolder => environment.GetFolderPath(System.Environment.SpecialFolder.ApplicationData);
+     private string LocalAppDataFolder => environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData);
+-    public string DolphinFilePath => isFlatpakSandboxed ? "/app/bin/dolphin-emu-wrapper" : dolphinLocation;
++    public string DolphinFilePath => isFlatpakSandboxed ? "/app/extensions/backends/dolphin-emu/bin/dolphin-emu-wrapper" : dolphinLocation;
+     public string UserFolderPath => userFolderPath;
+     private string LinuxDolphinLegacyRelSubFolderPath => ".dolphin-emu";
+     public string LinuxDolphinLegacyFolderPath => Path.Combine(HomeFolderPath, LinuxDolphinLegacyRelSubFolderPath);
+diff --git a/WheelWizard/Features/Recomp/RecompEnvironment.cs b/WheelWizard/Features/Recomp/RecompEnvironment.cs
+index 8f063924..51a6e8ad 100644
+--- a/WheelWizard/Features/Recomp/RecompEnvironment.cs
++++ b/WheelWizard/Features/Recomp/RecompEnvironment.cs
+@@ -16,6 +16,12 @@ public interface IRecompEnvironment
+     /// <summary>The directory the recomp is installed into.</summary>
+     string InstallFolderPath { get; }
+ 
++    /// <summary>
++    /// Indicates whether Wheel Wizard is missing an extension to be able to run
++    /// the game with the configured settings.
++    /// </summary>
++    ExtensionConfigurationInfo GetExtensionConfigurationInfo { get; }
++
+     /// <summary>
+     /// Whether <see cref="InstallFolderPath"/> is the portable location, which is what decides whether
+     /// a fresh install is asked to lay itself out portably.
+@@ -66,6 +72,8 @@ public sealed class RecompEnvironment(
+ 
+     public string InstallFolderPath => paths.InstallFolderPath;
+ 
++    public ExtensionConfigurationInfo GetExtensionConfigurationInfo => ExtensionConfigurationInfo.ExtensionFoundOrNotNeeded;
++
+     public bool IsPortableInstall => paths.IsPortableInstall;
+ 
+     public string CacheFolderPath => paths.CacheFolderPath;
+@@ -109,6 +117,8 @@ public sealed class RecompLinuxEnvironment(
+ 
+     public string InstallFolderPath => paths.LinuxBackendFolderPath;
+ 
++    public ExtensionConfigurationInfo GetExtensionConfigurationInfo => settings.CheckExtensionConfiguration();
++
+     public bool IsPortableInstall => false;
+ 
+     public string CacheFolderPath => paths.CacheFolderPath;
+diff --git a/WheelWizard/Features/Recomp/RecompInstallService.cs b/WheelWizard/Features/Recomp/RecompInstallService.cs
+index 688ea181..1227cfeb 100644
+--- a/WheelWizard/Features/Recomp/RecompInstallService.cs
++++ b/WheelWizard/Features/Recomp/RecompInstallService.cs
+@@ -164,6 +164,20 @@ public sealed class RecompInstallService : IRecompInstallService
+ 
+     public async Task<WheelWizardStatus> GetCurrentStatusAsync(CancellationToken cancellationToken = default)
+     {
++        // This switch statement should be a no-op on non-Linux/Flatpak systems anyway.
++        switch (environment.GetExtensionConfigurationInfo)
++        {
++            // This would mean that Wheel Wizard is configured to use Dolphin
++            case Settings.ExtensionConfigurationInfo.MissingDolphin:
++                return WheelWizardStatus.ConfigNotFinished;
++
++            case Settings.ExtensionConfigurationInfo.MissingRecomp:
++                return WheelWizardStatus.NoRecompExtension;
++
++            case Settings.ExtensionConfigurationInfo.ExtensionFoundOrNotNeeded:
++                break;
++        }
++
+         var state = ReadInstalledState();
+         var hasInstalledHost = fileSystem.File.Exists(environment.InstalledSetupFilePath);
+         if (hasInstalledHost && !IsCurrentInstallState(state))
+diff --git a/WheelWizard/Features/Recomp/RecompLauncher.cs b/WheelWizard/Features/Recomp/RecompLauncher.cs
+index 14e8fb8f..b37b9a94 100644
+--- a/WheelWizard/Features/Recomp/RecompLauncher.cs
++++ b/WheelWizard/Features/Recomp/RecompLauncher.cs
+@@ -99,9 +99,14 @@ public class RecompLauncher(
+ 
+             switch (retroRewindStatus.Value)
+             {
++                // This would mean that Wheel Wizard is configured to use Dolphin instead
++                case WheelWizardStatus.NoDolphinExtension:
++                    return WheelWizardStatus.ConfigNotFinished;
++
+                 case WheelWizardStatus.ConfigNotFinished:
+                 case WheelWizardStatus.NotInstalled:
+                 case WheelWizardStatus.OutOfDate:
++                case WheelWizardStatus.NoRecompExtension:
+                 case WheelWizardStatus.NoServer:
+                     return retroRewindStatus.Value;
+             }
+@@ -215,12 +220,16 @@ public class RecompLauncher(
+             return status.Error;
+ 
+         var requiresCommit = status.Value is WheelWizardStatus.NotInstalled or WheelWizardStatus.OutOfDate;
+-        OperationResult result = status.Value switch
++        var result = status.Value switch
+         {
+             WheelWizardStatus.Ready or WheelWizardStatus.NoServerButInstalled => Ok(),
+             WheelWizardStatus.NotInstalled => await customDistributions.RetroRewind.InstallAsync(operation),
+             WheelWizardStatus.OutOfDate => await customDistributions.RetroRewind.UpdateAsync(operation),
+             WheelWizardStatus.ConfigNotFinished => Fail(t("message_warning.not_find_game.extra")),
++            WheelWizardStatus.NoRecompExtension => Fail(
++                "Retro Rewind was not checked because the Wiicompiled Flatpak extension is missing"
++            ),
++            WheelWizardStatus.NoDolphinExtension => Fail("Retro Rewind was not checked because the Dolphin Flatpak extension is missing"),
+             WheelWizardStatus.NoServer => Fail("Retro Rewind could not be checked or installed because its update service is unavailable."),
+             _ => Fail("Retro Rewind is not ready for WiiCompiled."),
+         };
+diff --git a/WheelWizard/Features/Recomp/RecompLinuxInstallService.cs b/WheelWizard/Features/Recomp/RecompLinuxInstallService.cs
+index c8959475..4a7d1cef 100644
+--- a/WheelWizard/Features/Recomp/RecompLinuxInstallService.cs
++++ b/WheelWizard/Features/Recomp/RecompLinuxInstallService.cs
+@@ -107,17 +107,35 @@ public sealed class RecompLinuxInstallService : IRecompInstallService
+ 
+     public async Task<WheelWizardStatus> GetCurrentStatusAsync(CancellationToken cancellationToken = default)
+     {
++        switch (environment.GetExtensionConfigurationInfo)
++        {
++            // This would mean that Wheel Wizard is configured to use Dolphin
++            case Settings.ExtensionConfigurationInfo.MissingDolphin:
++                return WheelWizardStatus.ConfigNotFinished;
++
++            case Settings.ExtensionConfigurationInfo.MissingRecomp:
++                return WheelWizardStatus.NoRecompExtension;
++
++            case Settings.ExtensionConfigurationInfo.ExtensionFoundOrNotNeeded:
++                break;
++        }
++
+         var state = ReadInstalledState();
+         var hasInstalledHost = HasInstalledHost;
+         if (hasInstalledHost && !IsCurrentInstallState(state))
+             return IsGameFileConfigured() ? WheelWizardStatus.OutOfDate : WheelWizardStatus.ConfigNotFinished;
+ 
+         var installedVersion = IsCurrentInstallState(state) ? state!.SetupVersion : null;
+-        var latestRelease = await hosts.TryGetLatestReleaseAsync(cancellationToken);
++        var ignoreRecompRelease = IsBundledRecomp(environment.InstalledSetupFilePath);
++        var latestReleaseVersion = (ignoreRecompRelease ? null : await hosts.TryGetLatestReleaseAsync(cancellationToken))?.Version;
++        if (latestReleaseVersion is null)
++        {
++            RecompVersion.TryParse(await GetInstalledVersionAsync(), out latestReleaseVersion);
++        }
+         var setupUpgradeRequired =
+             RecompVersion.TryParse(installedVersion, out var installed)
+-            && latestRelease is not null
+-            && latestRelease.Version.ComparePrecedenceTo(installed) > 0;
++            && latestReleaseVersion is not null
++            && latestReleaseVersion.ComparePrecedenceTo(installed) > 0;
+         var products =
+             installedVersion is not null && hasInstalledHost && !setupUpgradeRequired ? await CheckProductsAsync(cancellationToken) : null;
+ 
+@@ -128,7 +146,7 @@ public sealed class RecompLinuxInstallService : IRecompInstallService
+         var status = RecompStatusResolver.Resolve(
+             IsGameFileConfigured(),
+             hasInstalledHost ? installedVersion : null,
+-            latestRelease?.TagName,
++            latestReleaseVersion?.ToString(),
+             products?.IsSuccess == true ? products.Value : null,
+             installationBusy
+         );
+@@ -197,6 +215,14 @@ public sealed class RecompLinuxInstallService : IRecompInstallService
+         }
+     }
+ 
++    /// <summary>
++    /// Decides based on the setup file path whether or not this is a bundled recomp setup binary
++    /// </summary>
++    private bool IsBundledRecomp(string setupFilePath)
++    {
++        return !setupFilePath.EndsWith(".AppImage", StringComparison.OrdinalIgnoreCase);
++    }
++
+     private async Task<OperationResult> InstallCoreAsync(
+         IProgress<RecompInstallProgress>? progress,
+         Func<Task<bool>>? confirmOfflineInstall,
+@@ -208,7 +234,6 @@ public sealed class RecompLinuxInstallService : IRecompInstallService
+ 
+         Report(progress, t("progress.recomp_checking_release"), 0);
+         var state = ReadInstalledState();
+-        var release = await hosts.TryGetLatestReleaseAsync(cancellationToken);
+ 
+         // Decided up front, before any download or build, so the user is asked while nothing has started
+         // yet rather than after a multi-minute build has already failed on the payload.
+@@ -221,6 +246,12 @@ public sealed class RecompLinuxInstallService : IRecompInstallService
+         // cannot see the payload choice, so the rebuild has to be forced.
+         var forceRetroRebuild = state is { IsRetroWfcPayloadSkipped: true } && payloadMode == RecompRetroWfcPayloadMode.Download;
+ 
++        // If Wheel Wizard is running as a Flatpak, the setup file path should never be an AppImage
++        var ignoreRecompRelease = IsBundledRecomp(environment.InstalledSetupFilePath);
++
++        // Avoid fetching the GitHub release if we don't want it
++        var release = ignoreRecompRelease ? null : await hosts.TryGetLatestReleaseAsync(cancellationToken);
++
+         // The installed host repairs on its own, offline included, as long as no newer release exists.
+         if (await InstalledHostIsCurrentAsync(state, release, cancellationToken))
+             return await RepairWhatTheCheckDemandsAsync(
+@@ -231,6 +262,10 @@ public sealed class RecompLinuxInstallService : IRecompInstallService
+                 cancellationToken
+             );
+ 
++        // Return early in case we have to use the bundled recomp
++        if (ignoreRecompRelease)
++            return await RunFullInstallAsync(environment.InstalledSetupFilePath, null, payloadMode, progress, cancellationToken);
++
+         if (release is null)
+             return Fail("Could not verify a current WiiCompiled setup release or installed repair host.");
+ 
+@@ -261,7 +296,7 @@ public sealed class RecompLinuxInstallService : IRecompInstallService
+ 
+     private async Task<OperationResult> RunFullInstallAsync(
+         string setupFilePath,
+-        RecompRelease release,
++        RecompRelease? release,
+         RecompRetroWfcPayloadMode payloadMode,
+         IProgress<RecompInstallProgress>? progress,
+         CancellationToken cancellationToken
+@@ -297,10 +332,11 @@ public sealed class RecompLinuxInstallService : IRecompInstallService
+             return setupOutcome;
+ 
+         // The AppImage reports the version it actually is; the release tag is only the fallback.
+-        var installedVersion = RecompVersion.TryParse(resultHolder.Value?.Version, out var reported)
+-            ? reported.ToString()
+-            : release.Version.ToString();
+-        var recordResult = RecordInstalledHost(setupFilePath, installedVersion, payloadMode);
++        var installedVersion =
++            RecompVersion.TryParse(resultHolder.Value?.Version, out var reported) ? reported.ToString()
++            : !(IsBundledRecomp(setupFilePath) || IsBundledRecomp(environment.InstalledSetupFilePath)) ? release?.Version.ToString()
++            : null;
++        var recordResult = await RecordInstalledHostAsync(setupFilePath, installedVersion, payloadMode);
+         if (recordResult.IsFailure)
+             return recordResult;
+ 
+@@ -312,17 +348,26 @@ public sealed class RecompLinuxInstallService : IRecompInstallService
+     /// Makes the AppImage that just installed the game the installed host: a copy beside a state file
+     /// that says which release it is. Only after this does the installation count as present.
+     /// </summary>
+-    private OperationResult RecordInstalledHost(string setupFilePath, string installedVersion, RecompRetroWfcPayloadMode payloadMode)
++    private Task<OperationResult> RecordInstalledHostAsync(
++        string setupFilePath,
++        string? installedVersion,
++        RecompRetroWfcPayloadMode payloadMode
++    )
+     {
+         return TryCatch(
+-            () =>
++            async () =>
+             {
+-                var hostFolderPath = fileSystem.Path.GetDirectoryName(environment.InstalledSetupFilePath);
+-                if (!string.IsNullOrWhiteSpace(hostFolderPath))
+-                    fileSystem.Directory.CreateDirectory(hostFolderPath);
+-                if (!PathsMatch(setupFilePath, environment.InstalledSetupFilePath))
+-                    fileSystem.File.Copy(setupFilePath, environment.InstalledSetupFilePath, overwrite: true);
+-                hosts.MakeExecutable(environment.InstalledSetupFilePath);
++                if (!(IsBundledRecomp(setupFilePath) || IsBundledRecomp(environment.InstalledSetupFilePath)))
++                {
++                    var hostFolderPath = fileSystem.Path.GetDirectoryName(environment.InstalledSetupFilePath);
++                    if (!string.IsNullOrWhiteSpace(hostFolderPath))
++                        fileSystem.Directory.CreateDirectory(hostFolderPath);
++                    if (!PathsMatch(setupFilePath, environment.InstalledSetupFilePath))
++                        fileSystem.File.Copy(setupFilePath, environment.InstalledSetupFilePath, overwrite: true);
++                    hosts.MakeExecutable(environment.InstalledSetupFilePath);
++                }
++
++                installedVersion ??= await GetInstalledVersionAsync();
+ 
+                 var retroRewindInstalled = environment.RetroRewindFolderPath is not null;
+                 WriteInstallState(
+@@ -479,7 +524,11 @@ public sealed class RecompLinuxInstallService : IRecompInstallService
+             () =>
+             {
+                 DeleteFolderIfPresent(environment.InstallFolderPath);
+-                DeleteFolderIfPresent(fileSystem.Path.GetDirectoryName(environment.InstalledSetupFilePath));
++                if (!IsBundledRecomp(environment.InstalledSetupFilePath))
++                {
++                    // Deleting the Flatpak Extension binary must not be attempted
++                    DeleteFolderIfPresent(fileSystem.Path.GetDirectoryName(environment.InstalledSetupFilePath));
++                }
+                 DeleteFolderIfPresent(environment.CacheFolderPath);
+                 DeleteFolderIfPresent(environment.NandCopyFolderPath);
+                 logger.LogInformation("Uninstalled WiiCompiled from {InstallFolder}", environment.InstallFolderPath);
+diff --git a/WheelWizard/Features/Recomp/RecompPaths.cs b/WheelWizard/Features/Recomp/RecompPaths.cs
+index 8a69c8b4..481bcdcc 100644
+--- a/WheelWizard/Features/Recomp/RecompPaths.cs
++++ b/WheelWizard/Features/Recomp/RecompPaths.cs
+@@ -27,7 +27,7 @@ public sealed class RecompPaths(IApplicationDataLocation applicationData, IFileS
+ {
+     public const string InstallStateFileName = "install-state.json";
+     private bool IsLinux => environment.IsLinux && RecompPlatform.LinuxReleaseAssetName(environment.OSArchitecture) is not null;
+-
++    private bool IsFlatpak => environment.IsFlatpakSandboxed(fileSystem);
+     public string RootFolderPath => fileSystem.Path.Combine(applicationData.DirectoryPath, "Recomp");
+     public string InstallFolderPath => fileSystem.Path.Combine(RootFolderPath, "Install");
+     public bool IsPortableInstall => !IsLinux;
+@@ -35,7 +35,9 @@ public sealed class RecompPaths(IApplicationDataLocation applicationData, IFileS
+     public string UserDataFolderPath => fileSystem.Path.Combine(RootFolderPath, "UserData");
+     public string InstallStateFilePath => fileSystem.Path.Combine(InstallFolderPath, InstallStateFileName);
+     public string SetupFilePath =>
+-        fileSystem.Path.Combine(InstallFolderPath, IsLinux ? "WiiCompiled-Setup.AppImage" : RecompSetupCommandBuilder.SetupFileName);
++        IsFlatpak
++            ? "/app/extensions/backends/wiicompiled/bin/wiicompiled-setup"
++            : fileSystem.Path.Combine(InstallFolderPath, IsLinux ? "WiiCompiled-Setup.AppImage" : RecompSetupCommandBuilder.SetupFileName);
+     public string LinuxBackendFolderPath =>
+         fileSystem.Path.Combine(environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "WiiCompiled");
+     public string LinuxBackendStateFilePath => fileSystem.Path.Combine(LinuxBackendFolderPath, InstallStateFileName);
+diff --git a/WheelWizard/Features/Settings/ExtensionConfigurationInfo.cs b/WheelWizard/Features/Settings/ExtensionConfigurationInfo.cs
+new file mode 100644
+index 00000000..ecf73212
+--- /dev/null
++++ b/WheelWizard/Features/Settings/ExtensionConfigurationInfo.cs
+@@ -0,0 +1,8 @@
++namespace WheelWizard.Settings;
++
++public enum ExtensionConfigurationInfo
++{
++    ExtensionFoundOrNotNeeded,
++    MissingDolphin,
++    MissingRecomp,
++}
+diff --git a/WheelWizard/Features/Settings/ISettingsServices.cs b/WheelWizard/Features/Settings/ISettingsServices.cs
+index 736cf20c..f504dc59 100644
+--- a/WheelWizard/Features/Settings/ISettingsServices.cs
++++ b/WheelWizard/Features/Settings/ISettingsServices.cs
+@@ -72,6 +72,7 @@ public interface ISettingsManager : ISettingsProperties
+ 
+     T Get<T>(Setting setting);
+     bool Set<T>(Setting setting, T value, bool skipSave = false);
++    ExtensionConfigurationInfo CheckExtensionConfiguration();
+     bool PathsSetupCorrectly();
+     bool DolphinPathsSetupCorrectly();
+ 
+diff --git a/WheelWizard/Features/Settings/SettingsManager.cs b/WheelWizard/Features/Settings/SettingsManager.cs
+index ab5340a7..7d0ce405 100644
+--- a/WheelWizard/Features/Settings/SettingsManager.cs
++++ b/WheelWizard/Features/Settings/SettingsManager.cs
+@@ -24,6 +24,8 @@ public class SettingsManager : ISettingsManager, IDisposable
+     private readonly IRecompPaths _recompPaths;
+     private readonly IRuntimeEnvironment _environment;
+     private bool IsFlatpakSandboxed => _environment.IsFlatpakSandboxed(_fileSystem);
++    private bool IsMissingExtensionForDolphin => _environment.IsMissingDolphinFlatpakExtension(_fileSystem);
++    private bool IsMissingExtensionForRecomp => _environment.IsMissingRecompFlatpakExtension(_fileSystem);
+ 
+     private readonly Setting _dolphinCompilationMode;
+     private readonly Setting _dolphinCompileShadersAtStart;
+@@ -69,7 +71,7 @@ public class SettingsManager : ISettingsManager, IDisposable
+         DOLPHIN_LOCATION = RegisterWhWz(
+             "DolphinLocation",
+             // Use the wrapper for the Flatpak as the default value as a hint for curious users
+-            IsFlatpakSandboxed ? "/app/bin/dolphin-emu-wrapper" : "",
++            IsFlatpakSandboxed ? "/app/extensions/backends/dolphin-emu/bin/dolphin-emu-wrapper" : "",
+             value =>
+             {
+                 if (IsFlatpakSandboxed)
+@@ -488,4 +490,23 @@ public class SettingsManager : ISettingsManager, IDisposable
+         }
+         _ownedSettings.Clear();
+     }
++
++    public ExtensionConfigurationInfo CheckExtensionConfiguration()
++    {
++        if (IsRecompModeActive())
++        {
++            if (IsMissingExtensionForRecomp)
++            {
++                return ExtensionConfigurationInfo.MissingRecomp;
++            }
++        }
++        else
++        {
++            if (IsMissingExtensionForDolphin)
++            {
++                return ExtensionConfigurationInfo.MissingDolphin;
++            }
++        }
++        return ExtensionConfigurationInfo.ExtensionFoundOrNotNeeded;
++    }
+ }
+diff --git a/WheelWizard/Models/Enums/ActionButtonStats.cs b/WheelWizard/Models/Enums/ActionButtonStats.cs
+index f8e3c5ca..b834529b 100644
+--- a/WheelWizard/Models/Enums/ActionButtonStats.cs
++++ b/WheelWizard/Models/Enums/ActionButtonStats.cs
+@@ -4,6 +4,8 @@ public enum WheelWizardStatus
+ {
+     Loading,
+     NoServer,
++    NoRecompExtension,
++    NoDolphinExtension,
+     NoDolphin,
+     ConfigNotFinished,
+     NotInstalled,
+diff --git a/WheelWizard/Resources/Languages/en.yml b/WheelWizard/Resources/Languages/en.yml
+index 168b12c2..3d910eb9 100644
+--- a/WheelWizard/Resources/Languages/en.yml
++++ b/WheelWizard/Resources/Languages/en.yml
+@@ -101,6 +101,8 @@ en:
+     updating: "Updating..."
+     config_not_finished: "Config Not Finished"
+     no_server: "No Server"
++    no_dolphin_extension: "No Dolphin Extension"
++    no_recomp_extension: "No Wiicompiled Extension"
+     unknown: "Unknown"
+     error: "Error"
+     warning: "Warning"
+diff --git a/WheelWizard/Shared/Platform/RuntimeEnvironmentExtensions.cs b/WheelWizard/Shared/Platform/RuntimeEnvironmentExtensions.cs
+index 911f4620..141a99c0 100644
+--- a/WheelWizard/Shared/Platform/RuntimeEnvironmentExtensions.cs
++++ b/WheelWizard/Shared/Platform/RuntimeEnvironmentExtensions.cs
+@@ -8,4 +8,12 @@ public static class RuntimeEnvironmentExtensions
+         environment.IsLinux
+         && fileSystem.File.Exists("/.flatpak-info")
+         && !string.IsNullOrWhiteSpace(environment.GetEnvironmentVariable("FLATPAK_ID"));
++
++    public static bool IsMissingDolphinFlatpakExtension(this IRuntimeEnvironment environment, IFileSystem fileSystem) =>
++        IsFlatpakSandboxed(environment, fileSystem)
++        && !fileSystem.File.Exists("/app/extensions/backends/dolphin-emu/bin/dolphin-emu-wrapper");
++
++    public static bool IsMissingRecompFlatpakExtension(this IRuntimeEnvironment environment, IFileSystem fileSystem) =>
++        IsFlatpakSandboxed(environment, fileSystem)
++        && !fileSystem.File.Exists("/app/extensions/backends/wiicompiled/bin/wiicompiled-setup");
+ }
+diff --git a/WheelWizard/Views/Pages/HomeViewModel.cs b/WheelWizard/Views/Pages/HomeViewModel.cs
+index 4442e71d..c6c4fc80 100644
+--- a/WheelWizard/Views/Pages/HomeViewModel.cs
++++ b/WheelWizard/Views/Pages/HomeViewModel.cs
+@@ -73,12 +73,14 @@ public sealed class HomeViewModel : INotifyPropertyChanged, IDisposable
+         IsInteractable
+         && IsDolphinVisible
+         && _settings.PathsSetupCorrectly()
+-        && _status is not (WheelWizardStatus.Loading or WheelWizardStatus.NoDolphin);
++        && _status is not (WheelWizardStatus.Loading or WheelWizardStatus.NoDolphin or WheelWizardStatus.NoDolphinExtension);
+ 
+     public string ButtonText =>
+         _status switch
+         {
+             WheelWizardStatus.NoServer => t("state.no_server"),
++            WheelWizardStatus.NoDolphinExtension => t("state.no_dolphin_extension"),
++            WheelWizardStatus.NoRecompExtension => t("state.no_recomp_extension"),
+             WheelWizardStatus.NoServerButInstalled => t("action.play_offline"),
+             WheelWizardStatus.NoDolphin => "Dolphin not setup",
+             WheelWizardStatus.ConfigNotFinished => t("state.config_not_finished"),
+@@ -91,7 +93,9 @@ public sealed class HomeViewModel : INotifyPropertyChanged, IDisposable
+     public Button.ButtonsVariantType ButtonVariant =>
+         _status switch
+         {
+-            WheelWizardStatus.NoServer => Button.ButtonsVariantType.Danger,
++            WheelWizardStatus.NoServer or WheelWizardStatus.NoRecompExtension or WheelWizardStatus.NoDolphinExtension => Button
++                .ButtonsVariantType
++                .Danger,
+             WheelWizardStatus.Ready => Button.ButtonsVariantType.Primary,
+             WheelWizardStatus.Loading => Button.ButtonsVariantType.Default,
+             _ => Button.ButtonsVariantType.Warning,
+@@ -100,7 +104,7 @@ public sealed class HomeViewModel : INotifyPropertyChanged, IDisposable
+     public string IconName =>
+         _status switch
+         {
+-            WheelWizardStatus.NoServer => "RoadError",
++            WheelWizardStatus.NoServer or WheelWizardStatus.NoRecompExtension or WheelWizardStatus.NoDolphinExtension => "RoadError",
+             WheelWizardStatus.NoServerButInstalled or WheelWizardStatus.Ready => "Play",
+             WheelWizardStatus.NoDolphin or WheelWizardStatus.ConfigNotFinished => "Settings",
+             WheelWizardStatus.NotInstalled or WheelWizardStatus.OutOfDate => "Download",
+diff --git a/WheelWizard/Views/Pages/TestingPage.axaml.cs b/WheelWizard/Views/Pages/TestingPage.axaml.cs
+index 39d4c350..2deb9115 100644
+--- a/WheelWizard/Views/Pages/TestingPage.axaml.cs
++++ b/WheelWizard/Views/Pages/TestingPage.axaml.cs
+@@ -63,6 +63,8 @@ public partial class TestingPage : UserControl
+             WheelWizardStatus.NotInstalled => "Not installed",
+             WheelWizardStatus.Ready => "Installed - Ready to play",
+             WheelWizardStatus.NoServer or WheelWizardStatus.NoServerButInstalled => "Server offline",
++            WheelWizardStatus.NoDolphinExtension => "No Dolphin extension",
++            WheelWizardStatus.NoRecompExtension => "No Wiicompiled extension",
+             WheelWizardStatus.OutOfDate => "Update available",
+             _ => "Checking status...",
+         };
+@@ -82,6 +84,8 @@ public partial class TestingPage : UserControl
+                 StatusPill.Classes.Add("warning");
+                 break;
+             case WheelWizardStatus.NoServer:
++            case WheelWizardStatus.NoDolphinExtension:
++            case WheelWizardStatus.NoRecompExtension:
+             case WheelWizardStatus.NoServerButInstalled:
+                 StatusPill.Classes.Add("danger");
+                 break;
