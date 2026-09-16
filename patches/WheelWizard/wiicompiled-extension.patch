@@ -1,0 +1,172 @@
+diff --git a/WheelWizard/Features/Recomp/RecompLinuxInstallService.cs b/WheelWizard/Features/Recomp/RecompLinuxInstallService.cs
+index c8959475..999ec23e 100644
+--- a/WheelWizard/Features/Recomp/RecompLinuxInstallService.cs
++++ b/WheelWizard/Features/Recomp/RecompLinuxInstallService.cs
+@@ -1,6 +1,7 @@
+ using System.IO.Abstractions;
+ using System.Text.Json;
+ using Microsoft.Extensions.Logging;
++using WheelWizard.Helpers;
+ using WheelWizard.Models.Enums;
+ using WheelWizard.Recomp.Domain;
+ 
+@@ -221,24 +222,31 @@ public sealed class RecompLinuxInstallService : IRecompInstallService
+         // cannot see the payload choice, so the rebuild has to be forced.
+         var forceRetroRebuild = state is { IsRetroWfcPayloadSkipped: true } && payloadMode == RecompRetroWfcPayloadMode.Download;
+ 
+-        // The installed host repairs on its own, offline included, as long as no newer release exists.
+-        if (await InstalledHostIsCurrentAsync(state, release, cancellationToken))
+-            return await RepairWhatTheCheckDemandsAsync(
+-                progress,
+-                payloadMode,
+-                forceRetroRebuild,
+-                reportCompletion: true,
+-                cancellationToken
+-            );
++        if (EnvHelper.ShouldUseRecompAppImage())
++        {
++            // The installed host repairs on its own, offline included, as long as no newer release exists.
++            if (await InstalledHostIsCurrentAsync(state, release, cancellationToken))
++                return await RepairWhatTheCheckDemandsAsync(
++                    progress,
++                    payloadMode,
++                    forceRetroRebuild,
++                    reportCompletion: true,
++                    cancellationToken
++                );
+ 
+-        if (release is null)
+-            return Fail("Could not verify a current WiiCompiled setup release or installed repair host.");
++            if (release is null)
++                return Fail("Could not verify a current WiiCompiled setup release or installed repair host.");
+ 
+-        var setupResult = await hosts.EnsureSetupDownloadedAsync(release, environment.CacheFolderPath, progress, cancellationToken);
+-        if (setupResult.IsFailure)
+-            return setupResult.Error;
++            var setupResult = await hosts.EnsureSetupDownloadedAsync(release, environment.CacheFolderPath, progress, cancellationToken);
++            if (setupResult.IsFailure)
++                return setupResult.Error;
+ 
+-        return await RunFullInstallAsync(setupResult.Value, release, payloadMode, progress, cancellationToken);
++            return await RunFullInstallAsync(setupResult.Value, release.Version.ToString(), payloadMode, progress, cancellationToken);
++        }
++        else
++        {
++            return await RunFullInstallAsync(environment.InstalledSetupFilePath, "0.0.0", payloadMode, progress, cancellationToken);
++        }
+     }
+ 
+     /// <summary>
+@@ -251,6 +259,10 @@ public sealed class RecompLinuxInstallService : IRecompInstallService
+         CancellationToken cancellationToken
+     )
+     {
++        if (!EnvHelper.ShouldUseRecompAppImage())
++        {
++            return true;
++        }
+         if (!HasInstalledHost || !IsCurrentInstallState(state))
+             return false;
+         if (release is not null && !RecompSetupHostAcquirer.VersionsMatch(state!.SetupVersion, release.TagName))
+@@ -261,7 +273,7 @@ public sealed class RecompLinuxInstallService : IRecompInstallService
+ 
+     private async Task<OperationResult> RunFullInstallAsync(
+         string setupFilePath,
+-        RecompRelease release,
++        string releaseVersion,
+         RecompRetroWfcPayloadMode payloadMode,
+         IProgress<RecompInstallProgress>? progress,
+         CancellationToken cancellationToken
+@@ -299,7 +311,7 @@ public sealed class RecompLinuxInstallService : IRecompInstallService
+         // The AppImage reports the version it actually is; the release tag is only the fallback.
+         var installedVersion = RecompVersion.TryParse(resultHolder.Value?.Version, out var reported)
+             ? reported.ToString()
+-            : release.Version.ToString();
++            : releaseVersion;
+         var recordResult = RecordInstalledHost(setupFilePath, installedVersion, payloadMode);
+         if (recordResult.IsFailure)
+             return recordResult;
+@@ -317,12 +329,15 @@ public sealed class RecompLinuxInstallService : IRecompInstallService
+         return TryCatch(
+             () =>
+             {
+-                var hostFolderPath = fileSystem.Path.GetDirectoryName(environment.InstalledSetupFilePath);
+-                if (!string.IsNullOrWhiteSpace(hostFolderPath))
+-                    fileSystem.Directory.CreateDirectory(hostFolderPath);
+-                if (!PathsMatch(setupFilePath, environment.InstalledSetupFilePath))
+-                    fileSystem.File.Copy(setupFilePath, environment.InstalledSetupFilePath, overwrite: true);
+-                hosts.MakeExecutable(environment.InstalledSetupFilePath);
++                if (environment.InstalledSetupFilePath.EndsWith(".AppImage", StringComparison.OrdinalIgnoreCase))
++                {
++                    var hostFolderPath = fileSystem.Path.GetDirectoryName(environment.InstalledSetupFilePath);
++                    if (!string.IsNullOrWhiteSpace(hostFolderPath))
++                        fileSystem.Directory.CreateDirectory(hostFolderPath);
++                    if (!PathsMatch(setupFilePath, environment.InstalledSetupFilePath))
++                        fileSystem.File.Copy(setupFilePath, environment.InstalledSetupFilePath, overwrite: true);
++                    hosts.MakeExecutable(environment.InstalledSetupFilePath);
++                }
+ 
+                 var retroRewindInstalled = environment.RetroRewindFolderPath is not null;
+                 WriteInstallState(
+@@ -479,7 +494,12 @@ public sealed class RecompLinuxInstallService : IRecompInstallService
+             () =>
+             {
+                 DeleteFolderIfPresent(environment.InstallFolderPath);
+-                DeleteFolderIfPresent(fileSystem.Path.GetDirectoryName(environment.InstalledSetupFilePath));
++                var flatpakExtensionOverride = EnvHelper.MaybeRecompSetupFileOverride();
++                if (string.IsNullOrWhiteSpace(flatpakExtensionOverride) ||
++                    !environment.InstalledSetupFilePath.Equals(flatpakExtensionOverride, StringComparison.Ordinal))
++                {
++                    DeleteFolderIfPresent(fileSystem.Path.GetDirectoryName(environment.InstalledSetupFilePath));
++                }
+                 DeleteFolderIfPresent(environment.CacheFolderPath);
+                 DeleteFolderIfPresent(environment.NandCopyFolderPath);
+                 logger.LogInformation("Uninstalled WiiCompiled from {InstallFolder}", environment.InstallFolderPath);
+diff --git a/WheelWizard/Helpers/EnvHelper.cs b/WheelWizard/Helpers/EnvHelper.cs
+index 7180d93e..b3cfef1e 100644
+--- a/WheelWizard/Helpers/EnvHelper.cs
++++ b/WheelWizard/Helpers/EnvHelper.cs
+@@ -48,11 +48,29 @@ public static class EnvHelper
+         return OperatingSystem.IsLinux() && FileHelper.FileExists("/.flatpak-info") && !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("FLATPAK_ID"));
+     }
+ 
++    public static string? MaybeRecompSetupFileOverride()
++    {
++        var flatpakExtensionOverride = "/app/extensions/backends/wiicompiled/bin/wiicompiled-setup";
++        if (IsFlatpakSandboxed())
++        {
++            if (FileHelper.FileExists(flatpakExtensionOverride))
++            {
++                return flatpakExtensionOverride;
++            }
++        }
++        return null;
++    }
++
++    public static bool ShouldUseRecompAppImage()
++    {
++        return OperatingSystem.IsLinux() && string.IsNullOrWhiteSpace(MaybeRecompSetupFileOverride());
++    }
++
+     public static string? MaybeDolphinLocationOverride()
+     {
+         if (IsFlatpakSandboxed())
+         {
+-            return "/app/bin/dolphin-emu-wrapper";
++            return "/app/extensions/backends/dolphin-emu/bin/dolphin-emu-wrapper";
+         }
+         return null;
+     }
+diff --git a/WheelWizard/Services/PathManager.cs b/WheelWizard/Services/PathManager.cs
+index 9c2eec0a..e203d0a9 100644
+--- a/WheelWizard/Services/PathManager.cs
++++ b/WheelWizard/Services/PathManager.cs
+@@ -101,7 +101,7 @@ public static partial class PathManager
+ 
+     public static string RecompCacheFolderPath => Path.Combine(RecompFolderPath, "Cache");
+     public static string RecompInstallStateFilePath => Path.Combine(RecompInstallFolderPath, RecompInstallStateFileName);
+-    public static string RecompSetupFilePath => Path.Combine(RecompInstallFolderPath, RecompPlatform.SetupFileName);
++    public static string RecompSetupFilePath => EnvHelper.MaybeRecompSetupFileOverride() ?? Path.Combine(RecompInstallFolderPath, RecompPlatform.SetupFileName);
+ 
+     /// <summary>The backend-owned runtime user state (Config.toml, private NAND, caches) inside the portable root.</summary>
+     public static string RecompUserDataFolderPath => Path.Combine(RecompFolderPath, "UserData");

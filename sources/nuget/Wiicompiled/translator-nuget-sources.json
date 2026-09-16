@@ -1,0 +1,9 @@
+[
+    {
+        "type": "file",
+        "url": "https://api.nuget.org/v3-flatcontainer/yamldotnet/15.1.2/yamldotnet.15.1.2.nupkg",
+        "sha512": "52e601f1f07e96ca481987734dc1f8a8ed65f2acf9d175d6d286bb70af1eede8d5687a76b2c36d85e0f57d46ac03a9bc9afe0ef796b2f7975c392327a34c8d57",
+        "dest": "translator-nuget-sources",
+        "dest-filename": "yamldotnet.15.1.2.nupkg"
+    }
+]
