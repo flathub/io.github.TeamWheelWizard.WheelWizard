@@ -1,0 +1,14 @@
+- type: git
+  url: https://github.com/dolphin-emu/dolphin.git
+  tag: "2609"
+  commit: f84df02055ab9610feec48e65648cac5a3c098fa
+  x-checker-data:
+    type: json
+    url: https://dolphin-emu.org/update/latest/beta
+    tag-query: .shortrev
+    version-query: .shortrev
+    timestamp-query: .date
+- type: patch
+  paths:
+    - patches/dolphin-emu/no-dirty-version.patch
+    - patches/dolphin-emu/dolphin-emu-wrapper.patch
