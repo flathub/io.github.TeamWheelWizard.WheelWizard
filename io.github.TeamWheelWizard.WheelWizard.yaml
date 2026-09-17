@@ -9,7 +9,6 @@ sdk-extensions:
   - org.freedesktop.Sdk.Extension.dotnet10
 
 finish-args:
-  #- --device=dri
   # WheelWizard supports Wayland, but Dolphin currently does not
   - --socket=x11
   - --share=ipc
@@ -19,8 +18,6 @@ finish-args:
   - --allow=bluetooth
   - --device=all
   - --socket=pulseaudio
-  # This effectively disables sandboxing (`flatpak-spawn --host -- ...`)
-  #- --talk-name=org.freedesktop.Flatpak
   # To also support native Dolphin
   - --filesystem=~/.dolphin-emu
   - --filesystem=xdg-config/dolphin-emu
@@ -38,8 +35,8 @@ finish-args:
   - --talk-name=org.mate.ScreenSaver
   # Required for Gamescope on Steam Deck
   - --filesystem=xdg-run/gamescope-0:ro
-  # Optional, but required for music attenuation support on WiiCompiled
-  - --talk-name=org.mpris.MediaPlayer2.*
+  # Optional, but required for music attenuation support on Wiicompiled
+  #- --talk-name=org.mpris.MediaPlayer2.*
 
 cleanup-commands:
   - >
