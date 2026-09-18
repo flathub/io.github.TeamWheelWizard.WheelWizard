@@ -174,6 +174,7 @@ modules:
         WheelWizard/WheelWizard.csproj
         ${DOTNET_REPRODUCIBLE_FLAGS}
         -c Release
+        -m:"${FLATPAK_BUILDER_N_JOBS}"
         --source ./nuget-sources
         --source /usr/lib/sdk/dotnet10/nuget/packages
         --no-self-contained
@@ -253,7 +254,10 @@ modules:
       - mkdir -p "${FLATPAK_DEST}/extensions/backends/wiicompiled"
       - mkdir -p "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin"
       - ln -s "$(which cmake)" "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/cmake"
-      - ln -s "$(which ninja)" "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/ninja"
+      # Always enable the verbose flag for `ninja`
+      - ln -s "$(which ninja)" "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/ninja-internal"
+      - echo 'exec /app/extensions/backends/wiicompiled/bin/ninja-internal -v "$@"' > "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/ninja"
+      - chmod +x "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/ninja"
       - >-
         find
         /usr/lib/sdk/llvm22
@@ -275,6 +279,7 @@ modules:
         --profile release-lto
         --features default
         --root "${FLATPAK_DEST}/extensions/backends/wiicompiled"
+        --jobs "${FLATPAK_BUILDER_N_JOBS}"
       - |
         ADDITIONAL_NUGET_SOURCE=
         MAYBE_EMPTY_NUGET_SOURCE='--source ../wiicompiled-setup-nuget-sources'
@@ -285,6 +290,7 @@ modules:
           Launcher/WiiCompiled.Setup.Linux/WiiCompiled.Setup.Linux.csproj \
           ${DOTNET_REPRODUCIBLE_FLAGS} \
           -c Release \
+          -m:"${FLATPAK_BUILDER_N_JOBS}" \
           ${ADDITIONAL_NUGET_SOURCE} \
           --source /usr/lib/sdk/dotnet8/nuget/packages \
           --no-self-contained
@@ -297,6 +303,7 @@ modules:
         translator/src/Translator.Cli/Translator.Cli.csproj
         ${DOTNET_REPRODUCIBLE_FLAGS}
         -c Release
+        -m:"${FLATPAK_BUILDER_N_JOBS}"
         --source ../translator-nuget-sources
         --source /usr/lib/sdk/dotnet8/nuget/packages
         --no-self-contained
@@ -320,7 +327,7 @@ modules:
         -DCMAKE_LINKER_TYPE=LLD
         ${DAWN_CMAKE_FLAGS}
         &&
-        cmake --build build --config Release
+        cmake --build build --config Release --parallel "${FLATPAK_BUILDER_N_JOBS}"
         &&
         cmake --install build --config Release
       - >-
@@ -329,6 +336,7 @@ modules:
         --llvm-dir "${FLATPAK_DEST}/extensions/backends/wiicompiled"
         --cmake-bin "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/cmake"
         --ninja-bin "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/ninja"
+        --parallel "${FLATPAK_BUILDER_N_JOBS}"
         --stage-dir build/native-prebuilt-stage
         --reuse-stage
         --disconnected
