@@ -252,6 +252,25 @@ modules:
     builddir: true
     build-commands:
       - mkdir -p "${FLATPAK_DEST}/extensions/backends/wiicompiled"
+      - |
+        python3 - <<'PY'
+        import os
+        import shlex
+
+        flatpak_dest = os.environ.get("FLATPAK_DEST", "/app")
+
+        names = [
+          "CFLAGS", "CXXFLAGS", "CPPFLAGS", "LDFLAGS",
+          "C_INCLUDE_PATH", "CPLUS_INCLUDE_PATH", "LC_ALL",
+        ]
+
+        with open("../build-env.sh", "w") as f:
+          for name in names:
+            if name in os.environ:
+              value = os.environ[name].replace(flatpak_dest, f"{flatpak_dest}/extensions/backends/wiicompiled")
+              f.write(f"export {name}={shlex.quote(value)}\n")
+        PY
+      - install -D -m0644 ../build-env.sh "${FLATPAK_DEST}/extensions/backends/wiicompiled/share/wiicompiled/build-env.sh"
       - mkdir -p "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin"
       - ln -s "$(which cmake)" "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/cmake"
       # Always enable the verbose flag for `ninja`
@@ -388,6 +407,7 @@ modules:
           - |
             set -eu
             WIICOMP_DIR='/app/extensions/backends/wiicompiled'
+            . "${WIICOMP_DIR}/share/wiicompiled/build-env.sh"
             CACHE="${XDG_DATA_HOME:-$HOME/.var/app/${FLATPAK_ID}/data}/WiiCompiled/workspace"
             mkdir -p "$CACHE"
             if [ ! -f "$CACHE/.bundle-version" ] || \
