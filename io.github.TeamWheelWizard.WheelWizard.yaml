@@ -33,6 +33,7 @@ finish-args:
   - --env=DOTNET_ROOT=/app/lib/dotnet
   - --env=DOTNET_CLI_TELEMETRY_OPTOUT=true
   - --env=DOTNET_EnableDiagnostics=0
+  - --env=DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=0
   - --share=network
   - --allow=bluetooth
   - --device=all
