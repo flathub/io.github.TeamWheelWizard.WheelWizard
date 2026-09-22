@@ -268,31 +268,61 @@ modules:
     builddir: true
     build-commands:
       - mkdir -p "${FLATPAK_DEST}/extensions/backends/wiicompiled"
-      # TODO: Minimize installation of LLVM
-      # Set up the LLVM toolchain
-      - >-
-        find
-        /usr/lib/sdk/llvm22
-        -mindepth 1
-        -maxdepth 1
-        -type d
-        '!' -name share
-        -exec cp -a {} "${FLATPAK_DEST}/extensions/backends/wiicompiled/" \;
       # Set up the sysroot
       - |
         mkdir -p "${FLATPAK_DEST}/extensions/backends/wiicompiled/sysroot/usr"
 
-        for target in bin include lib libexec share; do
+        for target in bin include lib share; do
+          mkdir -p "${FLATPAK_DEST}/extensions/backends/wiicompiled/$target"
           ln -s "../../$target" "${FLATPAK_DEST}/extensions/backends/wiicompiled/sysroot/usr/$target"
         done
 
         ln -s usr/bin "${FLATPAK_DEST}/extensions/backends/wiicompiled/sysroot/bin"
         ln -s usr/lib "${FLATPAK_DEST}/extensions/backends/wiicompiled/sysroot/lib"
         ln -s usr/lib "${FLATPAK_DEST}/extensions/backends/wiicompiled/sysroot/lib64"
-      # Populate the sysroot with required headers, libraries, and other runtime objects
+      # Populate the sysroot with required headers, libraries, other runtime objects,
+      # and the minimal LLVM toolchain installation
       - |
         set -euxo pipefail
 
+        SYSROOT="${FLATPAK_DEST}/extensions/backends/wiicompiled/sysroot"
+
+        find_file() {
+          "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/clang" --sysroot=/ --print-file-name="$1"
+        }
+
+        copy_files() {
+          for source in "$@"; do
+            destination_source_part="${source#"${STRIP_DESTINATION_PREFIX_PATTERN:-}"}"
+            destination="${SYSROOT}/${destination_source_part#/}"
+            mkdir -p "$(dirname "$destination")"
+            cp -a "$source" "$destination"
+
+            if [ -L "$source" ]; then
+              symlink_target=$(readlink -e "$source") || {
+                echo "Missing symlink destination for: '$source'"
+                return 1
+              }
+              (copy_files "$symlink_target") || return 1
+            fi
+          done
+        }
+
+        # Install the LLVM toolchain
+        mkdir -p "${SYSROOT}/lib"
+        find \
+          /usr/lib/sdk/llvm22/lib \
+          -mindepth 1 \
+          -maxdepth 1 \
+          '!' -name '*libear*' \
+          '!' -name '*lldb*' \
+          '!' -name '*scanbuild*' \
+          '!' -name '*python*' \
+          -exec cp -a {} "${SYSROOT}/lib/" \;
+        mkdir -p "${SYSROOT}/bin"
+        (STRIP_DESTINATION_PREFIX_PATTERN=/usr/lib/sdk/llvm22/ copy_files /usr/lib/sdk/llvm22/bin/{clang{,++},*lld,llvm-{ar,ranlib}})
+
+        # Find the target triples using `clang`
         TARGET_TRIPLE="$("${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/clang" -print-target-triple)"
         SHORT_TARGET_TRIPLE="$(printf '%s\n' "$TARGET_TRIPLE" | sed 's/-unknown-/-/')"
         if [ -z "$TARGET_TRIPLE" ] || [ -z "$SHORT_TARGET_TRIPLE" ]; then
@@ -300,27 +330,7 @@ modules:
           exit 1
         fi
 
-        SYSROOT="${FLATPAK_DEST}/extensions/backends/wiicompiled/sysroot"
-        find_file() {
-          "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/clang" --sysroot=/ --print-file-name="$1"
-        }
-
-        copy_file() {
-          for source in "$@"; do
-            destination="${SYSROOT}$source"
-            mkdir -p "$(dirname "$destination")"
-            cp -a "$source" "$destination"
-
-            if [ -L "$source" ]; then
-              symlink_target=$(readlink -e "$source") || {
-                echo "Missing symlink destination: '$source'"
-                return 1
-              }
-              (copy_file "$symlink_target") || return 1
-            fi
-          done
-        }
-
+        # Prepare required sysroot headers and low-level libraries
         mkdir -p "${SYSROOT}/usr/include"
         cp -a /usr/include/. "${SYSROOT}/usr/include/"
         mkdir -p "${SYSROOT}/usr/lib/${SHORT_TARGET_TRIPLE}/include"
@@ -357,7 +367,7 @@ modules:
             echo "Could not find '$source' using `clang`"
             exit 1
           fi
-          copy_file "$source"*
+          copy_files "$source"*
         done
 
         # Parse the libc linker script we copied earlier to make sure
@@ -366,7 +376,7 @@ modules:
         grep -E '^[[:space:]]*GROUP[[:space:]]*\(' "$libc" |
           grep -oE '/[^[:space:]]+' |
           while IFS= read -r lib; do
-            copy_file "$lib"
+            copy_files "$lib"
           done
       # Install toolchain license files
       - |
@@ -405,10 +415,7 @@ modules:
       - mkdir -p "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin"
       - cp -aL "$(which cmake)" "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/cmake"
       - cp -a /usr/share/cmake* "${FLATPAK_DEST}/extensions/backends/wiicompiled/share/"
-      # Always enable the verbose flag for `ninja`
-      - cp -aL "$(which ninja)" "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/ninja-internal"
-      - echo 'exec /app/extensions/backends/wiicompiled/bin/ninja-internal -v "$@"' > "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/ninja"
-      - chmod +x "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/ninja"
+      - cp -aL "$(which ninja)" "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/ninja"
       # Build and install the required `nodtool` binary
       - >-
         cargo
