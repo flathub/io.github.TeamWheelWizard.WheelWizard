@@ -1,8 +1,8 @@
 diff --git a/Launcher/Prepare-NativePrebuilt.sh b/Launcher/Prepare-NativePrebuilt.sh
-index 3d4e6ed..62aefb3 100755
+index 3d4e6ed..cccc5ee 100755
 --- a/Launcher/Prepare-NativePrebuilt.sh
 +++ b/Launcher/Prepare-NativePrebuilt.sh
-@@ -22,11 +22,16 @@ workspace=$(cd "$script_dir/.." && pwd)
+@@ -22,11 +22,17 @@ workspace=$(cd "$script_dir/.." && pwd)
  
  arch=""
  output_dir=""
@@ -10,6 +10,7 @@ index 3d4e6ed..62aefb3 100755
 +ninja_bin=""
 +cmake_bin=""
 +llvm_dir=""
++sysroot=""
  stage_dir="$workspace/build/native-prebuilt-stage"
  keep_stage=0
  reuse_stage=0
@@ -19,7 +20,7 @@ index 3d4e6ed..62aefb3 100755
  
  usage() {
      cat <<'EOF'
-@@ -56,6 +61,11 @@ while [[ $# -gt 0 ]]; do
+@@ -56,6 +62,12 @@ while [[ $# -gt 0 ]]; do
          --reuse-stage) reuse_stage=1; shift ;;
          --parallel) parallel=$2; shift 2 ;;
          --print-fingerprint-only) print_fingerprint_only=1; shift ;;
@@ -27,11 +28,12 @@ index 3d4e6ed..62aefb3 100755
 +        --ninja-bin) ninja_bin=$2; shift 2 ;;
 +        --cmake-bin) cmake_bin=$2; shift 2 ;;
 +        --llvm-dir) llvm_dir=$2; shift 2 ;;
++        --sysroot) sysroot=$2; shift 2 ;;
 +        --disconnected) disconnected=1; shift ;;
          -h|--help) usage; exit 0 ;;
          *) echo "Prepare-NativePrebuilt.sh: unknown argument: $1" >&2; exit 1 ;;
      esac
-@@ -75,11 +85,11 @@ normalize() { readlink -f "$1"; }
+@@ -75,11 +87,11 @@ normalize() { readlink -f "$1"; }
  [[ -n "$output_dir" ]] || output_dir="$script_dir/artifacts/native-prebuilt-$arch"
  [[ "$stage_dir" = /* ]] || stage_dir="$workspace/$stage_dir"
  
@@ -48,7 +50,7 @@ index 3d4e6ed..62aefb3 100755
  runtime_source="$workspace/runtime"
  aurora_source="$workspace/aurora-main"
  
-@@ -88,7 +98,7 @@ assert_file "$ninja_bin" "Portable Ninja"
+@@ -88,7 +100,7 @@ assert_file "$ninja_bin" "Portable Ninja"
  assert_file "$cc" "Portable C compiler"
  assert_file "$cxx" "Portable C++ compiler"
  assert_dir "$aurora_source" "aurora-main source tree"
@@ -57,7 +59,7 @@ index 3d4e6ed..62aefb3 100755
  assert_file "$clang_binary" "Portable clang driver binary"
  
  (( parallel > 0 )) || parallel=$(nproc)
-@@ -141,6 +151,11 @@ fixed_configure_flags=(
+@@ -141,6 +153,16 @@ fixed_configure_flags=(
      -DFT_DISABLE_BZIP2=ON
      -DCMAKE_POLICY_DEFAULT_CMP0168=NEW
  )
@@ -66,10 +68,15 @@ index 3d4e6ed..62aefb3 100755
 +        -DFETCHCONTENT_FULLY_DISCONNECTED=ON
 +    )
 +fi
++if [[ -n "$sysroot" ]]; then
++    fixed_configure_flags+=(
++        -DCMAKE_SYSROOT="$sysroot"
++    )
++fi
  flag_fingerprint=$(printf '%s\n' "${fixed_configure_flags[@]}" | sha256sum | awk '{print $1}')
  
  # extern/ is excluded because the payload ships that tree separately (aurora-main/extern is bundled
-@@ -560,9 +575,21 @@ for root, dirs, files in os.walk(output_dir):
+@@ -560,9 +582,21 @@ for root, dirs, files in os.walk(output_dir):
          contents.append({"Path": rel, "Bytes": os.path.getsize(path), "Sha256": digest})
  contents.sort(key=lambda c: c["Path"])
  
