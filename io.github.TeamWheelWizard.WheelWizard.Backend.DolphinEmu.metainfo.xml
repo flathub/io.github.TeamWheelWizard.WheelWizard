@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="addon">
+  <id>io.github.TeamWheelWizard.WheelWizard.Backend.DolphinEmu</id>
+  <extends>io.github.TeamWheelWizard.WheelWizard</extends>
+  <name>Dolphin Emulator</name>
+  <summary>Wii &amp; GameCube &amp; Triforce Emulator</summary>
+  <developer id="org.dolphin-emu">
+    <name>Dolphin Emulator Project</name>
+  </developer>
+
+  <metadata_license>FSFAP</metadata_license>
+  <project_license>GPL-2.0-or-later</project_license>
+  <content_rating type="oars-1.0"/>
+
+  <description>
+    <p>
+      The Dolphin Emulator backend of Wheel Wizard provides an
+      emulator capable of running Mario Kart Wii.
+      With support for Riivolution patches, it can reliably run the Retro Rewind
+      custom track distribution.
+    </p>
+  </description>
+
+  <url type="homepage">https://dolphin-emu.org</url>
+</component>
