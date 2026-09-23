@@ -3,7 +3,7 @@
   <id>io.github.TeamWheelWizard.WheelWizard.Backend.DolphinEmu</id>
   <extends>io.github.TeamWheelWizard.WheelWizard</extends>
   <name>Dolphin Emulator</name>
-  <summary>Wii &amp; GameCube &amp; Triforce Emulator</summary>
+  <summary>Wii/GameCube/Triforce Emulator</summary>
   <developer id="org.dolphin-emu">
     <name>Dolphin Emulator Project</name>
   </developer>
