@@ -10,13 +10,24 @@ BUILDER_APP_ID='org.flatpak.Builder'
 
 CLEAN=0
 
+usage() {
+  echo "Usage: $0 [--clean]"
+  exit 1
+}
+
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --clean)
       CLEAN=1
       shift
       ;;
+    -*)
+      echo "[-] Unknown option $1"
+      usage
+      ;;
     *)
+      echo "[-] Invalid argument $1"
+      usage
       ;;
   esac
 done
