@@ -138,7 +138,8 @@ modules:
         mv \
           "${FLATPAK_DEST}/share/licenses/${FLATPAK_ID}"/{dolphin-emu,libevdev} \
           "${LICENSE_DIR}/"
-      - install -Dm755 -t "${FLATPAK_DEST}/extensions/backends/dolphin-emu/bin/" ../Flatpak/dolphin-emu-wrapper
+      - install -D -m0755 -t "${FLATPAK_DEST}/extensions/backends/dolphin-emu/bin/" ../Flatpak/dolphin-emu-wrapper
+      - install -D -m0644 -t "${FLATPAK_DEST}/extensions/backends/dolphin-emu/share/metainfo" "../${FLATPAK_ID}.Backend.DolphinEmu.metainfo.xml"
     cleanup:
       - /extensions/backends/dolphin-emu/share/icons
       - /extensions/backends/dolphin-emu/share/applications
@@ -158,6 +159,8 @@ modules:
         path: patches/dolphin-emu/dolphin-emu-wrapper.patch
       - type: patch
         path: patches/dolphin-emu/no-dirty-version.patch
+      - type: file
+        path: io.github.TeamWheelWizard.WheelWizard.Backend.DolphinEmu.metainfo.xml
     modules:
       # Enables motion controls on non-wii controllers (switch, ps4, etc)
       # Requires a udev rule enabling Motion Sensors access
@@ -209,7 +212,7 @@ modules:
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.png" "${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/${FLATPAK_ID}.png"
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.metainfo.xml" "${FLATPAK_DEST}/share/metainfo/${FLATPAK_ID}.metainfo.xml"
     post-install:
-      - install -Dm755 -t "${FLATPAK_DEST}/bin/" wheelwizard-wrapper
+      - install -D -m0755 -t "${FLATPAK_DEST}/bin/" wheelwizard-wrapper
     sources:
       - type: git
         url: https://github.com/TeamWheelWizard/WheelWizard.git
@@ -267,7 +270,6 @@ modules:
           -DDAWN_USE_X11=ON
         RUSTFLAGS: '-C link-arg=-fuse-ld=mold'
     subdir: 'Wiicompiled'
-    builddir: true
     build-commands:
       - mkdir -p "${FLATPAK_DEST}/extensions/backends/wiicompiled"
       # Set up the sysroot
@@ -540,8 +542,9 @@ modules:
         LICENSE
         THIRD-PARTY-NOTICES.md
     post-install:
-      - install -Dm755 -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/" ../wiicompiled-setup
-      - install -Dm755 -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/" ../translator-cli
+      - install -D -m0755 -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/" ../wiicompiled-setup
+      - install -D -m0755 -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/" ../translator-cli
+      - install -D -m0644 -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/share/metainfo" "../${FLATPAK_ID}.Backend.Wiicompiled.metainfo.xml"
     sources:
       - type: git
         url: https://github.com/encounter/nod.git
@@ -609,5 +612,7 @@ modules:
 
             exec "${WIICOMP_DIR}/lib/translator/Translator.Cli" "$@"
         dest-filename: translator-cli
+      - type: file
+        path: io.github.TeamWheelWizard.WheelWizard.Backend.Wiicompiled.metainfo.xml
     modules:
       - ./modules/pip/Wiicompiled/dawn-jinja2-pip-module.yaml

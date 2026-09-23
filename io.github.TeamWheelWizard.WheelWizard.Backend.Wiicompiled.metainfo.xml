@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="addon">
+  <id>io.github.TeamWheelWizard.WheelWizard.Backend.Wiicompiled</id>
+  <extends>io.github.TeamWheelWizard.WheelWizard</extends>
+  <name>Wiicompiled</name>
+  <summary>Mario Kart Wii Static-Recompilation Toolchain</summary>
+  <developer id="io.github.patchzyy">
+    <name>patchzyy</name>
+  </developer>
+
+  <metadata_license>FSFAP</metadata_license>
+  <project_license>GPL-3.0</project_license>
+  <content_rating type="oars-1.0"/>
+
+  <description>
+    <p>
+      The Wiicompiled backend of Wheel Wizard is a static-recompilation toolchain for Mario Kart Wii.
+      It enables Wheel Wizard to run the game natively, without relying on a full Wii emulator,
+      by translating a user-supplied, legally obtained copy of Mario Kart Wii into native code.
+      Wiicompiled also supports the Retro Rewind custom track distribution for Mario Kart Wii.
+    </p>
+  </description>
+
+  <url type="homepage">https://github.com/patchzyy/Wiicompiled</url>
+</component>
