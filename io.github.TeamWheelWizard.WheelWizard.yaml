@@ -22,7 +22,6 @@ add-extensions:
     directory: extensions/backends/wiicompiled
     add-ld-path: lib
     bundle: true
-    # Prefer AppImage?
     no-autodownload: false
     autodelete: true
 
