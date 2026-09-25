@@ -16,7 +16,7 @@ $ ./update-sources.sh --dotnet <dotnet_version> --wii-dotnet <wiicompiled_dotnet
 ```
 
 The script will patch all .NET/Qt versions along with the commit
-of WheelWizard.
+of WheelWizard, and sources for dependencies.
 
 **Dependencies**: `awk`, `bash` `coreutils`, `diffutils`, `flatpak`, `git`, `grep`,
 `patch`, `python3`, `sed`, `uv`, `yq`.
