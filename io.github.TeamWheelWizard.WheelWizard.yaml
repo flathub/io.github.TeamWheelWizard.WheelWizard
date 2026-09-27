@@ -140,7 +140,7 @@ modules:
     sources:
       - type: git
         url: https://github.com/TeamWheelWizard/WheelWizard.git
-        commit: 7cc35a94ea8f54881d52d56fee18979876d70346
+        commit: 881f04b9dfefb408e18ab2c6573763f1d5115d4a
       - ./nuget-sources.json
       - type: script
         commands:
