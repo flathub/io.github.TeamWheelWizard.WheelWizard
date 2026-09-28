@@ -1,5 +1,5 @@
 diff --git a/CMake/ScmRevGen.cmake b/CMake/ScmRevGen.cmake
-index 5826f517c0..b07fe804f7 100644
+index dd9bea0c0d..626ea5b074 100644
 --- a/CMake/ScmRevGen.cmake
 +++ b/CMake/ScmRevGen.cmake
 @@ -7,7 +7,7 @@ if(GIT_FOUND)

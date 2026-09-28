@@ -1,6 +1,8 @@
 /.flatpak-builder/
 /.venv/
 /build-dir/
+/dawn/
+/dolphin/
 /nod/
 /repo/
 /tmp*
@@ -9,6 +11,5 @@
 /flatpak-cargo-generator.py
 /flatpak-dotnet-generator.py
 /flatpak-pip-generator.py
-/io.github.TeamWheelWizard.WheelWizard.yaml.*
 /pyproject.toml
 /uv.lock

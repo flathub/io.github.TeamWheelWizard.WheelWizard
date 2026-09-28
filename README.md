@@ -12,14 +12,13 @@ In order to update the source files, you can use the
 `update-sources.sh` script provided in this repository:
 
 ```sh
-$ ./update-sources.sh --dotnet <dotnet_version> --wii-dotnet <wiicompiled_dotnet_version>  --qt <qt_version> --commit <wheelwizard_commit> --wii-commit <wiicompiled_commit> --nod-commit <nodtool_commit>
+$ ./update-sources.sh --dotnet <dotnet_version> --wii-dotnet <wiicompiled_dotnet_version>  --qt <qt_version> --dolphin <dolphin_tag> --commit <wheelwizard_commit> --wii-commit <wiicompiled_commit> --nod-commit <nodtool_commit> --dawn-commit <dawn_commit>
 ```
 
 The script will patch all .NET/Qt versions along with the commit
 of WheelWizard, and sources for dependencies.
 
-**Dependencies**: `awk`, `bash` `coreutils`, `diffutils`, `flatpak`, `git`, `grep`,
-`patch`, `python3`, `sed`, `uv`, `yq`.
+**Dependencies**: `awk`, `bash` `coreutils`, `flatpak`, `git`, `patch`, `python3`, `sed`, `uv`, `yq`.
 
 To actually build and install the Flatpak locally using the local sources,
 you can use the `build-and-install.sh` script:

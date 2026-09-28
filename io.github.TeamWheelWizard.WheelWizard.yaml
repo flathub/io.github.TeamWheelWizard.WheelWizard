@@ -124,16 +124,7 @@ modules:
       - /extensions/backends/dolphin-emu/share/applications
       - /extensions/backends/dolphin-emu/share/man
     sources:
-      - type: git
-        url: https://github.com/dolphin-emu/dolphin.git
-        tag: 2606a
-        commit: c77bbaa0f372c3f72281602a8b087206706542cb
-        x-checker-data:
-          type: json
-          url: https://dolphin-emu.org/update/latest/beta
-          tag-query: .shortrev
-          version-query: .shortrev
-          timestamp-query: .date
+      - ./sources/dolphin-emu/dolphin-emu.yaml
       - type: patch
         path: patches/dolphin-emu/dolphin-emu-wrapper.patch
       - type: patch
@@ -207,12 +198,10 @@ modules:
     post-install:
       - install -D -m0755 -t "${FLATPAK_DEST}/bin/" wheelwizard-wrapper
     sources:
-      - type: git
-        url: https://github.com/TeamWheelWizard/WheelWizard.git
-        commit: 7cc35a94ea8f54881d52d56fee18979876d70346
+      - ./sources/WheelWizard/WheelWizard.yaml
       - type: patch
         path: patches/WheelWizard/wiicompiled-extension.patch
-      - ./sources/nuget/WheelWizard/wheelwizard-nuget-sources.json
+      - ./sources/WheelWizard/nuget/wheelwizard-nuget-sources.json
       - type: script
         commands:
           - >-
@@ -548,19 +537,13 @@ modules:
       - install -D -m0755 -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/" ../translator-cli
       - install -D -m0644 -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/share/metainfo" "../${FLATPAK_ID}.Backend.Wiicompiled.metainfo.xml"
     sources:
-      - type: git
-        url: https://github.com/encounter/nod.git
-        commit: ebd80cac99b48a323200d84365e07a58cc27412d
-        dest: nod
-      - ./sources/cargo/Wiicompiled/nodtool-cargo-sources.json
-      - type: git
-        url: https://github.com/patchzyy/Wiicompiled.git
-        commit: 6fb593749ee701545a7f1b77a8b0d505ee6d0f29
-        dest: Wiicompiled
-      # - ./sources/nuget/Wiicompiled/wiicompiled-setup-nuget-sources.json
-      - ./sources/nuget/Wiicompiled/translator-nuget-sources.json
-      - ./sources/cmake/Wiicompiled/native-prebuilt-sources.yaml
-      - ./sources/cmake/Wiicompiled/dawn-submodule-sources.yaml
+      - ./sources/Wiicompiled/nod.yaml
+      - ./sources/Wiicompiled/cargo/nodtool-cargo-sources.json
+      - ./sources/Wiicompiled/Wiicompiled.yaml
+      # - ./sources/Wiicompiled/nuget/wiicompiled-setup-nuget-sources.json
+      - ./sources/Wiicompiled/nuget/translator-nuget-sources.json
+      - ./sources/Wiicompiled/cmake/native-prebuilt-sources.yaml
+      - ./sources/Wiicompiled/cmake/dawn-submodule-sources.yaml
       - type: patch
         paths:
           - patches/Wiicompiled/native-prebuilt.patch
@@ -617,4 +600,4 @@ modules:
       - type: file
         path: io.github.TeamWheelWizard.WheelWizard.Backend.Wiicompiled.metainfo.xml
     modules:
-      - ./modules/pip/Wiicompiled/dawn-jinja2-pip-module.yaml
+      - ./modules/Wiicompiled/pip/dawn-jinja2-pip-module.yaml

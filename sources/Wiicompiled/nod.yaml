@@ -1,0 +1,4 @@
+- type: git
+  url: https://github.com/encounter/nod.git
+  commit: ebd80cac99b48a323200d84365e07a58cc27412d
+  dest: nod
