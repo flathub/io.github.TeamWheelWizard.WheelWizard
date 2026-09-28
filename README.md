@@ -18,7 +18,7 @@ $ ./update-sources.sh --dotnet <dotnet_version> --wii-dotnet <wiicompiled_dotnet
 The script will patch all .NET/Qt versions along with the commit
 of WheelWizard, and sources for dependencies.
 
-**Dependencies**: `awk`, `bash` `coreutils`, `flatpak`, `git`, `patch`, `python3`, `sed`, `uv`, `yq`.
+**Dependencies**: `awk`, `bash` `coreutils`, `flatpak`, `git`, `python3`, `sed`, `uv`, `yq`.
 
 To actually build and install the Flatpak locally using the local sources,
 you can use the `build-and-install.sh` script:
