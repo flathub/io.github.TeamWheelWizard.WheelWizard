@@ -558,9 +558,11 @@ modules:
             . "${WIICOMP_DIR}/share/wiicompiled/build-env.sh"
             CACHE="${XDG_DATA_HOME:-$HOME/.var/app/${FLATPAK_ID}/data}/WiiCompiled/workspace"
             mkdir -p "$CACHE"
-            if [ ! -f "$CACHE/.bundle-version" ] || \
-               [ "$(cat "${WIICOMP_DIR}/workspace/.bundle-version")" \
-               != "$(cat "$CACHE/.bundle-version")" ]; then
+            if \
+              [ ! -f "$CACHE/.bundle-version" ] || \
+              [ "$(cat "${WIICOMP_DIR}/workspace/.bundle-version")" \
+                != "$(cat "$CACHE/.bundle-version")" ]
+            then
               mkdir -p "$CACHE/Launcher"
               for dir in runtime aurora-main projects; do
                 rm -rf "$CACHE/$dir"
