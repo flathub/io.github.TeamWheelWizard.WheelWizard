@@ -5,6 +5,8 @@
 - type: patch
   paths:
     - patches/Wiicompiled/native-prebuilt.patch
+    - patches/Wiicompiled/xxhash-subdir.patch
+    - patches/Wiicompiled/aurora-webgpu.patch
   options:
     - -d
     - Wiicompiled

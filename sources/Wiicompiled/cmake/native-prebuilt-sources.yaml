@@ -1,31 +1,35 @@
 - type: git
   url: https://dawn.googlesource.com/dawn
-  commit: 13abc3bc8ea2d3c2050f9e77a12d012108ceee24
+  commit: 16fc4bade3097b85b954bc486c6821c4809ed878
   dest: dawn
   disable-submodules: true
 - type: archive
-  url: https://github.com/libsdl-org/SDL/releases/download/release-3.4.4/SDL3-3.4.4.tar.gz
-  sha256: ee712dbe6a89bb140bbfc2ce72358fb5ee5cc2240abeabd54855012db30b3864
+  url: https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-3.6.7/mbedtls-3.6.7.tar.bz2
+  sha256: a7e8bcbec0e6f761b4af24f25677626b35f762f68eef79c08677a363212d11f6
+  dest: Wiicompiled/build/native-prebuilt-stage/_deps/mkw_mbedtls_upstream-src
+- type: archive
+  url: https://github.com/libsdl-org/SDL/releases/download/release-3.4.16/SDL3-3.4.16.tar.gz
+  sha256: 7322236cd12090c3eb40b9728be4d49c76f66ad17d04369584d4ecad5cf77c68
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/sdl-src
 - type: archive
-  url: https://github.com/abseil/abseil-cpp/archive/refs/tags/20240722.0.tar.gz
-  sha256: f50e5ac311a81382da7fa75b97310e4b9006474f9560ac46f54a9967f07d4ae3
+  url: https://github.com/abseil/abseil-cpp/archive/refs/tags/20260817.0.tar.gz
+  sha256: f7e05179df39c45434cad433f5783840bb3788ef322976f9138bc6b72b3a107d
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/abseil-cpp-src
 - type: archive
-  url: https://github.com/Cyan4973/xxHash/archive/refs/tags/v0.8.3.tar.gz
-  sha256: aae608dfe8213dfd05d909a57718ef82f30722c392344583d3f39050c7f29a80
+  url: https://github.com/Cyan4973/xxHash/archive/refs/tags/v0.8.4.tar.gz
+  sha256: 5738270935e7c3d38a79b3adf7c9692566ce7895a25f67de43ad52ab504acd32
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/xxhash-src
 - type: archive
-  url: https://github.com/fmtlib/fmt/archive/refs/tags/11.1.4.tar.gz
-  sha256: ac366b7b4c2e9f0dde63a59b3feb5ee59b67974b14ee5dc9ea8ad78aa2c1ee1e
+  url: https://github.com/fmtlib/fmt/archive/refs/tags/12.2.0.tar.gz
+  sha256: 8b852bb5aa6e7d8564f9e81394055395dd1d1936d38dfd3a17792a02bebd7af0
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/fmt-src
 - type: archive
   url: https://github.com/madler/zlib/releases/download/v1.3.2/zlib-1.3.2.tar.gz
   sha256: bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/zlib-src
 - type: archive
-  url: https://github.com/pnggroup/libpng/archive/refs/tags/v1.6.58.tar.gz
-  sha256: a9d4df463d36a6e5f9c29bd6f4967312d17e996c1854f3511f833924eb1993cf
+  url: https://github.com/pnggroup/libpng/archive/refs/tags/v1.6.59.tar.gz
+  sha256: 2540302a1844ad2b2b501977abecfa850f265f97b78f065a712ab4074a89f5b5
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/png-src
 - type: archive
   url: https://files.twilitrealm.dev/freetype-2.14.3.tar.gz
@@ -35,18 +39,18 @@
   sha256: e61b31ab26358b946e767ed7eb7f4bb2e507da1cfefeb7a8861ace7fd5c899a1
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/freetype-src
 - type: archive
-  url: https://github.com/ocornut/imgui/archive/refs/tags/v1.91.9b-docking.tar.gz
-  sha256: 466fdef9b18de15f0bb6e288e3d00ffa3d82200ec458ce5e4f724a161d9528a5
+  url: https://github.com/ocornut/imgui/archive/refs/tags/v1.92.9b-docking.tar.gz
+  sha256: 90ded916bd57db2e0e171b6b098940a47c6f5042725dcdc67fb19940ca8bfdcc
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/imgui-src
 - type: archive
-  url: https://sqlite.org/2026/sqlite-amalgamation-3510300.zip
-  sha256: acb1e6f5d832484bf6d32b681e858c38add8b2acdfd42ac5df24b8afb46552b4
+  url: https://sqlite.org/2026/sqlite-amalgamation-3530400.zip
+  sha256: 1e71ddf93849c6a6ecf58b827c0692073d2dd7ee40196158068f7b29f422e87d
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/sqlite3-src
 - type: archive
   url: https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-1.5.7.tar.gz
   sha256: eb33e51f49a15e023950cd7825ca74a4a2b43db8354825ac24fc1b7ee09e6fa3
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/zstd-src
 - type: archive
-  url: https://github.com/wolfpld/tracy/archive/a64b9a20294d59421a2f57aeca3c6383d8c48169.tar.gz
-  sha256: 24d342b5127d7f659dc3cf94f24347b348cc736f25b17a691fd7f69541937658
+  url: https://github.com/wolfpld/tracy/archive/refs/tags/v0.14.1.tar.gz
+  sha256: bf4af567e9c7524d07f3caa745fad02fb33bd5694f11910750382d1efbb251c1
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/tracy-src

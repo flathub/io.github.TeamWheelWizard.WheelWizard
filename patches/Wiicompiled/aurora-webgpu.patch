@@ -1,0 +1,35 @@
+diff --git a/aurora-main/lib/webgpu/gpu.cpp b/aurora-main/lib/webgpu/gpu.cpp
+index 9724893..3da02ef 100644
+--- a/aurora-main/lib/webgpu/gpu.cpp
++++ b/aurora-main/lib/webgpu/gpu.cpp
+@@ -664,12 +664,15 @@ bool initialize(AuroraBackend auroraBackend) {
+           "not safe on this device.");
+     }
+ #ifdef WEBGPU_DAWN
+-    wgpu::DawnCacheDeviceDescriptor cacheDescriptor({
+-        .isolationKey = nullptr,
+-        .loadDataFunction = load_from_cache,
+-        .storeDataFunction = store_to_cache,
+-        .functionUserdata = nullptr,
+-    });
++    wgpu::DawnCacheDeviceDescriptor cacheDescriptor{};
++    cacheDescriptor.SetDawnLoadCacheDataCallback(
++        [](std::span<const std::byte> key, std::span<std::byte> value) noexcept -> size_t {
++          return load_from_cache(key.data(), key.size(), value.data(), value.size(), nullptr);
++        });
++    cacheDescriptor.SetDawnStoreCacheDataCallback(
++        [](std::span<const std::byte> key, std::span<const std::byte> value) noexcept {
++          store_to_cache(key.data(), key.size(), value.data(), value.size(), nullptr);
++        });
+ 
+     std::vector<const char*> enableToggles{
+     /* clang-format off */
+@@ -693,7 +696,7 @@ bool initialize(AuroraBackend auroraBackend) {
+     if (g_backendType == wgpu::BackendType::Vulkan) {
+       enableToggles.push_back("vulkan_monolithic_pipeline_cache");
+     }
+-    const wgpu::DawnTogglesDescriptor togglesDescriptor({
++    const wgpu::DawnTogglesDescriptor togglesDescriptor(wgpu::DawnTogglesDescriptor::Init{
+         .nextInChain = &cacheDescriptor,
+         .enabledToggleCount = enableToggles.size(),
+         .enabledToggles = enableToggles.data(),

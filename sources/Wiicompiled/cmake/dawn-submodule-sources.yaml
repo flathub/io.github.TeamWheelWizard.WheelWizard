@@ -1,25 +1,25 @@
 - type: git
   url: https://chromium.googlesource.com/chromium/src/third_party/abseil-cpp
   dest: dawn/third_party/abseil-cpp
-  commit: d16e32215c3ab90ba57c2e904a5344d85c7353e4
+  commit: 7f06dec0efe9f5c51b08761baff62dde5c4d7576
   disable-submodules: true
 - type: git
   url: https://chromium.googlesource.com/external/github.com/KhronosGroup/SPIRV-Headers
   dest: dawn/third_party/spirv-headers/src
-  commit: 1e770e7de8373a8dd49f23416cf7ca4001d01040
+  commit: cb42dec3830d3ac67fa449ecdc0c0f73d5e74498
   disable-submodules: true
 - type: git
   url: https://chromium.googlesource.com/external/github.com/KhronosGroup/SPIRV-Tools
   dest: dawn/third_party/spirv-tools/src
-  commit: b38c4f83024546d4000b2db8e2294cf81b7f26e0
+  commit: 1d0401cd2b68ae34cda9ff625bedd1be4ed6214a
   disable-submodules: true
 - type: git
   url: https://chromium.googlesource.com/external/github.com/KhronosGroup/Vulkan-Headers
   dest: dawn/third_party/vulkan-headers/src
-  commit: 015e25c3c91b70eb1a754d36fb14c4ba6ad9b0b9
+  commit: 3c65a01745e4a1134d32b9c2c456472212dba16d
   disable-submodules: true
 - type: git
   url: https://chromium.googlesource.com/external/github.com/KhronosGroup/Vulkan-Utility-Libraries
   dest: dawn/third_party/vulkan-utility-libraries/src
-  commit: 8383c46b129c2b3a5f3833e602d946d2fcc57e39
+  commit: 666fdaa0f87b9d49ae576473227b4b4cf428ba7e
   disable-submodules: true
