@@ -2,3 +2,9 @@
   url: https://github.com/patchzyy/Wiicompiled.git
   commit: 82991ec33745950273f64afa7fb52c7cd4e7555f
   dest: Wiicompiled
+- type: patch
+  paths:
+    - patches/Wiicompiled/native-prebuilt.patch
+  options:
+    - -d
+    - Wiicompiled

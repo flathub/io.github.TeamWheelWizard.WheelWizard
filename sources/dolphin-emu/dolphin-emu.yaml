@@ -8,3 +8,7 @@
     tag-query: .shortrev
     version-query: .shortrev
     timestamp-query: .date
+- type: patch
+  paths:
+    - patches/dolphin-emu/no-dirty-version.patch
+    - patches/dolphin-emu/dolphin-emu-wrapper.patch

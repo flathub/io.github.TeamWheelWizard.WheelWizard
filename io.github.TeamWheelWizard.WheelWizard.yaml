@@ -125,10 +125,6 @@ modules:
       - /extensions/backends/dolphin-emu/share/man
     sources:
       - ./sources/dolphin-emu/dolphin-emu.yaml
-      - type: patch
-        path: patches/dolphin-emu/dolphin-emu-wrapper.patch
-      - type: patch
-        path: patches/dolphin-emu/no-dirty-version.patch
       - type: file
         path: io.github.TeamWheelWizard.WheelWizard.Backend.DolphinEmu.metainfo.xml
     modules:
@@ -199,8 +195,6 @@ modules:
       - install -D -m0755 -t "${FLATPAK_DEST}/bin/" wheelwizard-wrapper
     sources:
       - ./sources/WheelWizard/WheelWizard.yaml
-      - type: patch
-        path: patches/WheelWizard/wiicompiled-extension.patch
       - ./sources/WheelWizard/nuget/wheelwizard-nuget-sources.json
       - type: script
         commands:
@@ -544,12 +538,6 @@ modules:
       - ./sources/Wiicompiled/nuget/translator-nuget-sources.json
       - ./sources/Wiicompiled/cmake/native-prebuilt-sources.yaml
       - ./sources/Wiicompiled/cmake/dawn-submodule-sources.yaml
-      - type: patch
-        paths:
-          - patches/Wiicompiled/native-prebuilt.patch
-        options:
-          - -d
-          - Wiicompiled
       - type: script
         commands:
           - |
