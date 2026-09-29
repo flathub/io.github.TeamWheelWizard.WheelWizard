@@ -5,6 +5,7 @@
 - type: patch
   paths:
     - patches/Wiicompiled/native-prebuilt.patch
+    - patches/Wiicompiled/xxhash-subdir.patch
   options:
     - -d
     - Wiicompiled

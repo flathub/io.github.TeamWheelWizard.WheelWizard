@@ -300,7 +300,7 @@ modules:
           '!' -name '*python*' \
           -exec cp -a {} "${SYSROOT}/lib/" \;
         mkdir -p "${SYSROOT}/bin"
-        (STRIP_DESTINATION_PREFIX_PATTERN=/usr/lib/sdk/llvm22/ copy_files /usr/lib/sdk/llvm22/bin/{clang{,++},*lld,llvm-{ar,ranlib}})
+        (STRIP_DESTINATION_PREFIX_PATTERN=/usr/lib/sdk/llvm22/ copy_files /usr/lib/sdk/llvm22/bin/{clang{,++,-scan-deps},*lld,llvm-{ar,ranlib}})
 
         # Find the target triples using `clang`
         TARGET_TRIPLE="$("${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/clang" -print-target-triple)"
