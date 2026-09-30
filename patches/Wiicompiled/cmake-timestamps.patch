@@ -1,0 +1,233 @@
+diff --git a/Launcher/prepare-portable-tools.sh b/Launcher/prepare-portable-tools.sh
+index 6517786..de7ffb3 100755
+--- a/Launcher/prepare-portable-tools.sh
++++ b/Launcher/prepare-portable-tools.sh
+@@ -225,7 +225,7 @@ EOF
+ # clang++ invocation above would not catch a broken CMAKE_ROOT (Modules/Templates) or a Ninja that
+ # can't find the compiler.
+ cat > "$test_dir/CMakeLists.txt" <<'EOF'
+-cmake_minimum_required(VERSION 3.16)
++cmake_minimum_required(VERSION 3.25)
+ project(test CXX)
+ add_executable(test t.cpp)
+ EOF
+diff --git a/aurora-main/cmake/AuroraDawnProvider.cmake b/aurora-main/cmake/AuroraDawnProvider.cmake
+index da71fb8..7b0e387 100644
+--- a/aurora-main/cmake/AuroraDawnProvider.cmake
++++ b/aurora-main/cmake/AuroraDawnProvider.cmake
+@@ -101,7 +101,7 @@ if (_aurora_dawn_provider STREQUAL "vendor")
+     include(FetchContent)
+     FetchContent_Declare(dawn
+       URL "https://github.com/google/dawn/archive/refs/tags/${AURORA_DAWN_VERSION}.tar.gz"
+-      DOWNLOAD_EXTRACT_TIMESTAMP TRUE
++      DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+       EXCLUDE_FROM_ALL
+     )
+     FetchContent_MakeAvailable(dawn)
+@@ -194,7 +194,7 @@ elseif (_aurora_dawn_provider STREQUAL "package")
+   FetchContent_Declare(dawn_prebuilt
+     URL "${AURORA_DAWN_PACKAGE_URL}"
+     ${_dawn_prebuilt_hash_argument}
+-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
++    DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+   )
+   FetchContent_MakeAvailable(dawn_prebuilt)
+ 
+diff --git a/aurora-main/cmake/AuroraLibUSB.cmake b/aurora-main/cmake/AuroraLibUSB.cmake
+index 2739736..1aaa297 100644
+--- a/aurora-main/cmake/AuroraLibUSB.cmake
++++ b/aurora-main/cmake/AuroraLibUSB.cmake
+@@ -7,7 +7,7 @@
+ include(FetchContent)
+ FetchContent_Declare(libusb
+   URL "https://github.com/libusb/libusb/releases/download/v${AURORA_LIBUSB_VERSION}/libusb-${AURORA_LIBUSB_VERSION}.tar.bz2"
+-  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
++  DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+ )
+ # Upstream ships no CMakeLists.txt, so this only populates the source tree.
+ FetchContent_MakeAvailable(libusb)
+diff --git a/aurora-main/cmake/AuroraNodProvider.cmake b/aurora-main/cmake/AuroraNodProvider.cmake
+index dbb9a71..b112d9d 100644
+--- a/aurora-main/cmake/AuroraNodProvider.cmake
++++ b/aurora-main/cmake/AuroraNodProvider.cmake
+@@ -120,7 +120,7 @@ elseif (_aurora_nod_provider STREQUAL "package")
+   include(FetchContent)
+   FetchContent_Declare(nod_prebuilt
+     URL "${AURORA_NOD_PACKAGE_URL}"
+-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
++    DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+     EXCLUDE_FROM_ALL
+   )
+   FetchContent_MakeAvailable(nod_prebuilt)
+diff --git a/aurora-main/cmake/AuroraSDL3Provider.cmake b/aurora-main/cmake/AuroraSDL3Provider.cmake
+index 16ce933..e2059ea 100644
+--- a/aurora-main/cmake/AuroraSDL3Provider.cmake
++++ b/aurora-main/cmake/AuroraSDL3Provider.cmake
+@@ -92,7 +92,7 @@ elseif (_aurora_sdl3_provider STREQUAL "package")
+   include(FetchContent)
+   FetchContent_Declare(sdl3_prebuilt
+     URL "${AURORA_SDL3_PACKAGE_URL}"
+-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
++    DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+   )
+   FetchContent_MakeAvailable(sdl3_prebuilt)
+ 
+@@ -145,7 +145,7 @@ elseif (_aurora_sdl3_provider STREQUAL "vendor")
+     endif ()
+     FetchContent_Declare(SDL
+       URL "https://github.com/libsdl-org/SDL/releases/download/release-${AURORA_SDL3_VERSION}/SDL3-${AURORA_SDL3_VERSION}.tar.gz"
+-      DOWNLOAD_EXTRACT_TIMESTAMP TRUE
++      DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+       PATCH_COMMAND "${CMAKE_COMMAND}" -DSDL_SOURCE_DIR=<SOURCE_DIR> -P "${_aurora_sdl3_patches}"
+       EXCLUDE_FROM_ALL
+     )
+diff --git a/aurora-main/extern/CMakeLists.txt b/aurora-main/extern/CMakeLists.txt
+index 67488ee..02e5a32 100644
+--- a/aurora-main/extern/CMakeLists.txt
++++ b/aurora-main/extern/CMakeLists.txt
+@@ -38,7 +38,7 @@ else ()
+   set(ABSL_PROPAGATE_CXX_STD ON)
+   FetchContent_Declare(abseil-cpp
+     URL https://github.com/abseil/abseil-cpp/archive/refs/tags/20240722.0.tar.gz
+-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
++    DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+     EXCLUDE_FROM_ALL
+   )
+   FetchContent_MakeAvailable(abseil-cpp)
+@@ -55,7 +55,7 @@ if (NOT TARGET xxhash)
+     URL https://github.com/Cyan4973/xxHash/archive/refs/tags/v0.8.4.tar.gz
+     URL_HASH SHA256=5738270935e7c3d38a79b3adf7c9692566ce7895a25f67de43ad52ab504acd32
+     SOURCE_SUBDIR build/cmake
+-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
++    DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+     EXCLUDE_FROM_ALL
+   )
+   set(XXHASH_BUILD_XXHSUM OFF CACHE INTERNAL "Build the xxhsum binary")
+@@ -78,7 +78,7 @@ if (NOT TARGET fmt)
+   FetchContent_Declare(fmt
+     URL https://github.com/fmtlib/fmt/archive/refs/tags/11.1.4.tar.gz
+     URL_HASH SHA256=ac366b7b4c2e9f0dde63a59b3feb5ee59b67974b14ee5dc9ea8ad78aa2c1ee1e
+-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
++    DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+     EXCLUDE_FROM_ALL
+   )
+   FetchContent_MakeAvailable(fmt)
+@@ -116,7 +116,7 @@ if (AURORA_ENABLE_GX)
+       ZLIB
+       URL https://github.com/madler/zlib/releases/download/v1.3.2/zlib-1.3.2.tar.gz
+       URL_HASH SHA256=bb329a0a2cd0274d05519d61c667c062e06990d72e125ee2dfa8de64f0119d16
+-      DOWNLOAD_EXTRACT_TIMESTAMP TRUE
++      DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+       EXCLUDE_FROM_ALL
+     )
+     FetchContent_MakeAvailable(ZLIB)
+@@ -152,7 +152,7 @@ if (AURORA_ENABLE_GX)
+       PNG
+       URL https://github.com/pnggroup/libpng/archive/refs/tags/v1.6.58.tar.gz
+       URL_HASH SHA256=A9D4DF463D36A6E5F9C29BD6F4967312D17E996C1854F3511F833924EB1993CF
+-      DOWNLOAD_EXTRACT_TIMESTAMP TRUE
++      DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+       EXCLUDE_FROM_ALL
+     )
+     FetchContent_MakeAvailable(PNG)
+@@ -176,7 +176,7 @@ if (AURORA_ENABLE_GX)
+     FetchContent_Declare(Freetype
+       URL https://files.twilitrealm.dev/freetype-2.14.3.tar.gz
+       URL_HASH SHA256=e61b31ab26358b946e767ed7eb7f4bb2e507da1cfefeb7a8861ace7fd5c899a1
+-      DOWNLOAD_EXTRACT_TIMESTAMP TRUE
++      DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+       EXCLUDE_FROM_ALL
+     )
+     FetchContent_MakeAvailable(Freetype)
+@@ -190,7 +190,7 @@ if (AURORA_ENABLE_GX)
+     FetchContent_Declare(imgui
+       URL https://github.com/ocornut/imgui/archive/refs/tags/v1.91.9b-docking.tar.gz
+       URL_HASH SHA256=466fdef9b18de15f0bb6e288e3d00ffa3d82200ec458ce5e4f724a161d9528a5
+-      DOWNLOAD_EXTRACT_TIMESTAMP TRUE
++      DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+       EXCLUDE_FROM_ALL
+     )
+     FetchContent_MakeAvailable(imgui)
+@@ -235,7 +235,7 @@ if (AURORA_ENABLE_GX)
+     FetchContent_Declare(sqlite3
+       URL https://sqlite.org/2026/sqlite-amalgamation-3510300.zip
+       URL_HASH SHA256=acb1e6f5d832484bf6d32b681e858c38add8b2acdfd42ac5df24b8afb46552b4
+-      DOWNLOAD_EXTRACT_TIMESTAMP TRUE
++      DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+       EXCLUDE_FROM_ALL
+     )
+     FetchContent_MakeAvailable(sqlite3)
+@@ -278,7 +278,7 @@ if (AURORA_ENABLE_GX)
+       FetchContent_Declare(zstd
+         URL https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-1.5.7.tar.gz
+         URL_HASH SHA256=eb33e51f49a15e023950cd7825ca74a4a2b43db8354825ac24fc1b7ee09e6fa3
+-        DOWNLOAD_EXTRACT_TIMESTAMP TRUE
++        DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+         SOURCE_SUBDIR build/cmake
+         EXCLUDE_FROM_ALL
+       )
+@@ -299,7 +299,7 @@ if (NOT TARGET TracyClient)
+           tracy
+           URL https://github.com/wolfpld/tracy/archive/a64b9a20294d59421a2f57aeca3c6383d8c48169.tar.gz
+           URL_HASH SHA256=24d342b5127d7f659dc3cf94f24347b348cc736f25b17a691fd7f69541937658
+-          DOWNLOAD_EXTRACT_TIMESTAMP TRUE
++          DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+           EXCLUDE_FROM_ALL
+   )
+   FetchContent_MakeAvailable(tracy)
+diff --git a/aurora-main/tests/CMakeLists.txt b/aurora-main/tests/CMakeLists.txt
+index 73d2ffb..d20dedd 100644
+--- a/aurora-main/tests/CMakeLists.txt
++++ b/aurora-main/tests/CMakeLists.txt
+@@ -5,7 +5,7 @@ if (NOT TARGET gtest)
+   FetchContent_Declare(googletest
+     URL https://github.com/google/googletest/archive/refs/tags/v1.17.0.tar.gz
+     URL_HASH SHA256=65fab701d9829d38cb77c14acdc431d2108bfdbf8979e40eb8ae567edf10b27c
+-    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
++    DOWNLOAD_EXTRACT_TIMESTAMP FALSE
+     EXCLUDE_FROM_ALL
+   )
+   FetchContent_MakeAvailable(googletest)
+diff --git a/runtime/CMakeLists.txt b/runtime/CMakeLists.txt
+index 6c573e0..22537d3 100644
+--- a/runtime/CMakeLists.txt
++++ b/runtime/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-﻿cmake_minimum_required(VERSION 3.16)
++﻿cmake_minimum_required(VERSION 3.25)
+ project(mkw_recompiled)
+ 
+ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "^(Clang|AppleClang)$" OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
+@@ -132,7 +132,9 @@ if(NOT MKW_PLATFORM_WINDOWS)
+         include(FetchContent)
+         FetchContent_Declare(mkw_mbedtls_upstream
+             URL "https://github.com/Mbed-TLS/mbedtls/releases/download/mbedtls-${MKW_MBEDTLS_VERSION}/mbedtls-${MKW_MBEDTLS_VERSION}.tar.bz2"
+-            URL_HASH SHA256=${MKW_MBEDTLS_SHA256})
++            URL_HASH SHA256=${MKW_MBEDTLS_SHA256}
++            DOWNLOAD_EXTRACT_TIMESTAMP FALSE
++        )
+         # Subproject mode already disables testing and codegen; it still enables programs.
+         set(ENABLE_PROGRAMS OFF CACHE BOOL "" FORCE)
+         set(ENABLE_TESTING OFF CACHE BOOL "" FORCE)
+diff --git a/translator/README.md b/translator/README.md
+index 6ea5709..99596a0 100644
+--- a/translator/README.md
++++ b/translator/README.md
+@@ -18,7 +18,7 @@ entry point, decodes every reachable function, and emits C++ (plus JSON metadata
+ what was emitted).
+ 
+ 2.  **`generate-data-init --project <manifest>`** - writes the embedded `.data`/`.rodata`/`.sdata`
+-section initializer and `RuntimeConfig.h`. 
++section initializer and `RuntimeConfig.h`.
+ 
+ 3.  **`emit-build-shards --project <manifest>`** - emits the CMake build graph (`shards.cmake`)
+ covering both generated sources and `runtime/src`.
+@@ -36,7 +36,7 @@ See `projects/examples/generic-dol.yml` for a minimal manifest driven by `RECOMP
+ | Tool | Notes |
+ | --- | --- |
+ | .NET 8 SDK | Builds and runs the translator. |
+-| CMake ≥ 3.16 and Ninja | Configures and drives the native build. |
++| CMake ≥ 3.25 and Ninja | Configures and drives the native build. |
+ | Clang / LLVM | The shipped build uses LLVM-MinGW targeting `x86-64-v3`. MSVC is not the tested path. |
+ 
+ Build the CLI once and invoke the assembly directly:

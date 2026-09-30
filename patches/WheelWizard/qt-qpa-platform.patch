@@ -1,0 +1,26 @@
+diff --git a/WheelWizard/Features/DolphinInstaller/DolphinVersionService.cs b/WheelWizard/Features/DolphinInstaller/DolphinVersionService.cs
+index b3e583e0..4b240323 100644
+--- a/WheelWizard/Features/DolphinInstaller/DolphinVersionService.cs
++++ b/WheelWizard/Features/DolphinInstaller/DolphinVersionService.cs
+@@ -50,7 +50,7 @@ public sealed class DolphinVersionService(IUnixProcessService processService, ID
+         // a broken Qt platform configuration should not be what stops us from reading the version.
+         List<string> arguments = [];
+         if (paths.Layout.IsFlatpakSandboxed() || environment.IsLinux && !paths.Layout.IsFlatpakDolphinFilePath(dolphinLocation))
+-            arguments.Add("QT_QPA_PLATFORM=xcb");
++            arguments.Add("QT_QPA_PLATFORM=wayland;xcb");
+ 
+         arguments.AddRange(["sh", "-c", "--", $"{dolphinLocation} --version"]);
+ 
+diff --git a/WheelWizard/Features/Launching/DolphinLaunchService.cs b/WheelWizard/Features/Launching/DolphinLaunchService.cs
+index 78900143..3a29cfb6 100644
+--- a/WheelWizard/Features/Launching/DolphinLaunchService.cs
++++ b/WheelWizard/Features/Launching/DolphinLaunchService.cs
+@@ -188,7 +188,7 @@ public sealed class DolphinLaunchService(
+                     if (!IsFlatpakSandboxed && paths.Layout.IsFlatpakDolphinFilePath(dolphinLocation))
+                         dolphinLocation = FixFlatpakDolphinPermissions(dolphinLocation);
+                     else
+-                        startInfo.EnvironmentVariables["QT_QPA_PLATFORM"] = "xcb";
++                        startInfo.EnvironmentVariables["QT_QPA_PLATFORM"] = "wayland;xcb";
+ 
+                     if (IsFlatpakSandboxed)
+                     {

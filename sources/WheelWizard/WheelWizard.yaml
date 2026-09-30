@@ -1,6 +1,7 @@
 - type: git
   url: https://github.com/TeamWheelWizard/WheelWizard.git
-  commit: 881f04b9dfefb408e18ab2c6573763f1d5115d4a
+  commit: cf5f3efd9cc3d15889842cd0cf3ba5538e4e42c8
 - type: patch
   paths:
     - patches/WheelWizard/wiicompiled-extension.patch
+    - patches/WheelWizard/qt-qpa-platform.patch
