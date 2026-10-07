@@ -89,12 +89,12 @@ modules:
     buildsystem: cmake-ninja
     build-options:
       # Don't use any default flags provided by the SDK
-      cflags: ""
+      cflags: ''
       cflags-override: true
-      cxxflags: ""
+      cxxflags: ''
       cxxflags-override: true
-      append-ld-library-path: '/app/extensions/backends/dolphin-emu/lib'
-      prepend-pkg-config-path: '/app/extensions/backends/dolphin-emu/lib/pkgconfig'
+      append-ld-library-path: /app/extensions/backends/dolphin-emu/lib
+      prepend-pkg-config-path: /app/extensions/backends/dolphin-emu/lib/pkgconfig
     builddir: true
     config-opts:
       - -DCMAKE_BUILD_TYPE=Release
@@ -117,8 +117,10 @@ modules:
         mv \
           "${FLATPAK_DEST}/share/licenses/${FLATPAK_ID}"/{dolphin-emu,libevdev} \
           "${LICENSE_DIR}/"
-      - install -D -m0755 -t "${FLATPAK_DEST}/extensions/backends/dolphin-emu/bin/" ../Flatpak/dolphin-emu-wrapper
-      - install -D -m0644 -t "${FLATPAK_DEST}/extensions/backends/dolphin-emu/share/metainfo" "../${FLATPAK_ID}.Backend.DolphinEmu.metainfo.xml"
+      - install -D -m0755 -t "${FLATPAK_DEST}/extensions/backends/dolphin-emu/bin/"
+        ../Flatpak/dolphin-emu-wrapper
+      - install -D -m0644 -t "${FLATPAK_DEST}/extensions/backends/dolphin-emu/share/metainfo"
+        "../${FLATPAK_ID}.Backend.DolphinEmu.metainfo.xml"
     cleanup:
       - /extensions/backends/dolphin-emu/share/icons
       - /extensions/backends/dolphin-emu/share/applications
@@ -141,8 +143,8 @@ modules:
           - /extensions/backends/dolphin-emu/share/man
         sources:
           - type: archive
-            url: https://www.freedesktop.org/software/libevdev/libevdev-1.13.7.tar.xz
-            sha256: 0caf824971108f15bb2ad356433bae198d7d3bf1e82d43f63626e069e060bfa6
+            url: https://www.freedesktop.org/software/libevdev/libevdev-1.14.0.tar.xz
+            sha256: 5a0966c7110648665983848bad696c7acba614a2160d2865d535397101007332
             x-checker-data:
               type: anitya
               project-id: 20540
@@ -151,16 +153,16 @@ modules:
   - name: WheelWizard
     buildsystem: simple
     build-options:
-      prepend-path: '/usr/lib/sdk/dotnet10/bin'
-      append-ld-library-path: '/usr/lib/sdk/dotnet10/lib'
-      prepend-pkg-config-path: '/usr/lib/sdk/dotnet10/lib/pkgconfig'
+      prepend-path: /usr/lib/sdk/dotnet10/bin
+      append-ld-library-path: /usr/lib/sdk/dotnet10/lib
+      prepend-pkg-config-path: /usr/lib/sdk/dotnet10/lib/pkgconfig
       arch:
         aarch64:
           env:
-            RUNTIME: 'linux-arm64'
+            RUNTIME: linux-arm64
         x86_64:
           env:
-            RUNTIME: 'linux-x64'
+            RUNTIME: linux-x64
     build-commands:
       - >-
         DOTNET_CLI_TELEMETRY_OPTOUT=true dotnet
@@ -216,12 +218,12 @@ modules:
   - name: Wiicompiled
     buildsystem: simple
     build-options:
-      prepend-path: '/usr/lib/sdk/dotnet8/bin'
-      append-path: '/usr/lib/sdk/rust-stable/bin'
-      append-ld-library-path: '/usr/lib/sdk/dotnet8/lib'
-      prepend-pkg-config-path: '/usr/lib/sdk/dotnet8/lib/pkgconfig'
+      prepend-path: /usr/lib/sdk/dotnet8/bin
+      append-path: /usr/lib/sdk/rust-stable/bin
+      append-ld-library-path: /usr/lib/sdk/dotnet8/lib
+      prepend-pkg-config-path: /usr/lib/sdk/dotnet8/lib/pkgconfig
       env:
-        CARGO_HOME: '/run/build/Wiicompiled/cargo'
+        CARGO_HOME: /run/build/Wiicompiled/cargo
         CARGO_NET_OFFLINE: 'true'
         DAWN_CMAKE_FLAGS: >-
           -DDAWN_BUILD_MONOLITHIC_LIBRARY=STATIC
@@ -244,8 +246,8 @@ modules:
           -DDAWN_USE_GLFW=OFF
           -DDAWN_USE_WAYLAND=ON
           -DDAWN_USE_X11=ON
-        RUSTFLAGS: '-C link-arg=-fuse-ld=mold'
-    subdir: 'Wiicompiled'
+        RUSTFLAGS: -C link-arg=-fuse-ld=mold
+    subdir: Wiicompiled
     build-commands:
       - mkdir -p "${FLATPAK_DEST}/extensions/backends/wiicompiled"
       # Set up the sysroot
@@ -435,7 +437,8 @@ modules:
           --source /usr/lib/sdk/dotnet8/nuget/packages \
           --no-self-contained
       - mkdir -p "${FLATPAK_DEST}"/extensions/backends/wiicompiled/{bin,lib/wiicompiled-setup}
-      - cp -r --remove-destination Launcher/WiiCompiled.Setup.Linux/bin/Release/net*/publish/* "${FLATPAK_DEST}/extensions/backends/wiicompiled/lib/wiicompiled-setup"
+      - cp -r --remove-destination Launcher/WiiCompiled.Setup.Linux/bin/Release/net*/publish/*
+        "${FLATPAK_DEST}/extensions/backends/wiicompiled/lib/wiicompiled-setup"
       - ln -s ../lib/wiicompiled-setup/WiiCompiled.Setup.Linux "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/wiicompiled-setup"
       # Build the required PowerPC static recompiler program
       - >-
@@ -449,7 +452,8 @@ modules:
         --source /usr/lib/sdk/dotnet8/nuget/packages
         --no-self-contained
       - mkdir -p "${FLATPAK_DEST}"/extensions/backends/wiicompiled/{bin,lib/translator}
-      - cp -r --remove-destination translator/src/Translator.Cli/bin/Release/net*/publish/* "${FLATPAK_DEST}/extensions/backends/wiicompiled/lib/translator"
+      - cp -r --remove-destination translator/src/Translator.Cli/bin/Release/net*/publish/*
+        "${FLATPAK_DEST}/extensions/backends/wiicompiled/lib/translator"
       - ln -s ../lib/translator/Translator.Cli "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/translator-cli"
       # No need for bin/dotnet
       - mkdir -p "${FLATPAK_DEST}/extensions/backends/wiicompiled/lib/dotnet"
@@ -527,9 +531,12 @@ modules:
         LICENSE
         THIRD-PARTY-NOTICES.md
     post-install:
-      - install -D -m0755 -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/" ../wiicompiled-setup
-      - install -D -m0755 -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/" ../translator-cli
-      - install -D -m0644 -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/share/metainfo" "../${FLATPAK_ID}.Backend.Wiicompiled.metainfo.xml"
+      - install -D -m0755 -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/"
+        ../wiicompiled-setup
+      - install -D -m0755 -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/bin/"
+        ../translator-cli
+      - install -D -m0644 -t "${FLATPAK_DEST}/extensions/backends/wiicompiled/share/metainfo"
+        "../${FLATPAK_ID}.Backend.Wiicompiled.metainfo.xml"
     sources:
       - ./sources/Wiicompiled/nod.yaml
       - ./sources/Wiicompiled/cargo/nodtool-cargo-sources.json
