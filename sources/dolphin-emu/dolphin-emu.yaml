@@ -1,7 +1,7 @@
 - type: git
   url: https://github.com/dolphin-emu/dolphin.git
-  tag: "2609"
-  commit: f84df02055ab9610feec48e65648cac5a3c098fa
+  tag: "2609a"
+  commit: 409881c34357d0f105fd473167d15ab0bd9c1628
   x-checker-data:
     type: json
     url: https://dolphin-emu.org/update/latest/beta
