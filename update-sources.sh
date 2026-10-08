@@ -328,7 +328,7 @@ update_tag() {
 
 git clone "$DOLPHIN_URL" "$DOLPHIN_REPO_NAME"
 pushd "$DOLPHIN_REPO_NAME"
-git checkout "$DOLPHIN_TAG"
+git checkout "refs/tags/$DOLPHIN_TAG"
 DOLPHIN_COMMIT="$(git rev-parse HEAD)"
 popd
 rm -rf "$DOLPHIN_REPO_NAME"
