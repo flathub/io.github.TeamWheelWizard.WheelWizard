@@ -26,6 +26,7 @@ add-extensions:
     autodelete: true
 
 finish-args:
+  - --socket=wayland
   # WheelWizard supports Wayland, but Dolphin currently does not
   - --socket=x11
   - --share=ipc
@@ -164,6 +165,7 @@ modules:
           env:
             RUNTIME: linux-x64
     build-commands:
+      - git apply app-id.patch
       - >-
         DOTNET_CLI_TELEMETRY_OPTOUT=true dotnet
         publish
@@ -190,6 +192,10 @@ modules:
       # Install metadata files
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.desktop" "${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop"
       - install -D -m0644 "Flatpak/${FLATPAK_ID}-url-handler.desktop" "${FLATPAK_DEST}/share/applications/${FLATPAK_ID}-url-handler.desktop"
+      - desktop-file-edit --set-key=Exec --set-value="${FLATPAK_DEST}/bin/wheelwizard-wrapper"
+        "${FLATPAK_DEST}/share/applications/${FLATPAK_ID}.desktop"
+      - desktop-file-edit --set-key=Exec --set-value="${FLATPAK_DEST}/bin/wheelwizard-wrapper %U"
+        "${FLATPAK_DEST}/share/applications/${FLATPAK_ID}-url-handler.desktop"
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.svg" "${FLATPAK_DEST}/share/icons/hicolor/scalable/apps/${FLATPAK_ID}.svg"
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.png" "${FLATPAK_DEST}/share/icons/hicolor/512x512/apps/${FLATPAK_ID}.png"
       - install -D -m0644 "Flatpak/${FLATPAK_ID}.metainfo.xml" "${FLATPAK_DEST}/share/metainfo/${FLATPAK_ID}.metainfo.xml"
