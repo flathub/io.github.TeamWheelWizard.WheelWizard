@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+WIICOMP_DIR='/app/extensions/backends/wiicompiled'
+. "${WIICOMP_DIR}/share/wiicompiled/build-env.sh"
+CACHE="${XDG_DATA_HOME:-$HOME/.var/app/${FLATPAK_ID}/data}/WiiCompiled/workspace"
+mkdir -p "$CACHE"
+if \
+  [ ! -f "$CACHE/.bundle-version" ] || \
+  [ "$(cat "${WIICOMP_DIR}/workspace/.bundle-version")" \
+    != "$(cat "$CACHE/.bundle-version")" ]
+then
+  . "${WIICOMP_DIR}/workspace/Launcher/build-cache.sh"
+  mkw_sync_tree \
+    "${WIICOMP_DIR}/workspace" \
+    "$CACHE" \
+    runtime aurora-main projects Launcher \
+    >&2
+  cp "${WIICOMP_DIR}/workspace/.bundle-version" \
+    "$CACHE/"
+fi
+
+[ -L "$CACHE/toolchain" ] || rm -rf "$CACHE/toolchain"
+[ -L "$CACHE/native-prebuilt" ] || rm -rf "$CACHE/native-prebuilt"
+ln -sfn "${WIICOMP_DIR}" "$CACHE/toolchain"
+ln -sfn "${WIICOMP_DIR}" "$CACHE/native-prebuilt"
+
+export DOTNET_ROOT="${WIICOMP_DIR}/lib/dotnet"
+
+exec \
+  "${WIICOMP_DIR}/lib/wiicompiled-setup/WiiCompiled.Setup.Linux" \
+  --workspace "$CACHE" \
+  --translator-bin "${WIICOMP_DIR}/bin/translator-cli" \
+  --disc-tool-bin "${WIICOMP_DIR}/bin/nodtool" \
+  --cc "${WIICOMP_DIR}/bin/clang" \
+  --cxx "${WIICOMP_DIR}/bin/clang++" \
+  --fuse-ld lld \
+  --cmake "${WIICOMP_DIR}/bin/cmake" \
+  --ninja "${WIICOMP_DIR}/bin/ninja" \
+  --sysroot "${WIICOMP_DIR}/sysroot" \
+  --native-prebuilt-dir "${WIICOMP_DIR}" \
+  "$@"

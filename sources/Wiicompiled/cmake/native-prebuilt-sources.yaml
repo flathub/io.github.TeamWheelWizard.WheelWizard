@@ -8,8 +8,8 @@
   sha256: a7e8bcbec0e6f761b4af24f25677626b35f762f68eef79c08677a363212d11f6
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/mkw_mbedtls_upstream-src
 - type: archive
-  url: https://github.com/libsdl-org/SDL/releases/download/release-3.4.16/SDL3-3.4.16.tar.gz
-  sha256: 7322236cd12090c3eb40b9728be4d49c76f66ad17d04369584d4ecad5cf77c68
+  url: https://github.com/libsdl-org/SDL/releases/download/release-3.4.18/SDL3-3.4.18.tar.gz
+  sha256: 9c75cf16330322c217dedd2e0609f1124f1b54b8633e763467b4684d0f4334a3
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/sdl-src
 - type: archive
   url: https://github.com/abseil/abseil-cpp/archive/refs/tags/20260817.0.tar.gz
