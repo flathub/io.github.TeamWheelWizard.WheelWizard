@@ -1,6 +1,13 @@
 [
     {
         "type": "file",
+        "url": "https://api.nuget.org/v3-flatcontainer/tomlyn/2.10.1/tomlyn.2.10.1.nupkg",
+        "sha512": "9d071b377436f8516f714b3b13092ed77977ece98209e33d12a3db2ab1712a9e9e3cab19b45c40f29a3c94aee48cd82e027ab65d0ba83e0796633e18aa2b4a5d",
+        "dest": "translator-nuget-sources",
+        "dest-filename": "tomlyn.2.10.1.nupkg"
+    },
+    {
+        "type": "file",
         "url": "https://api.nuget.org/v3-flatcontainer/yamldotnet/15.1.2/yamldotnet.15.1.2.nupkg",
         "sha512": "52e601f1f07e96ca481987734dc1f8a8ed65f2acf9d175d6d286bb70af1eede8d5687a76b2c36d85e0f57d46ac03a9bc9afe0ef796b2f7975c392327a34c8d57",
         "dest": "translator-nuget-sources",
