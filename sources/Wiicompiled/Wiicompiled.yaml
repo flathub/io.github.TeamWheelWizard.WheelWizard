@@ -1,4 +1,4 @@
 - type: git
   url: https://github.com/patchzyy/Wiicompiled.git
-  commit: 46eb6b46f50dc3e0188f94b35303a879dd04d015
+  commit: 4c166a7eb1ddfc79b4c832e422e6bb00ec06fb4f
   dest: Wiicompiled
