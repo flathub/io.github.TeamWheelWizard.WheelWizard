@@ -49,8 +49,9 @@ DOLPHIN_REPO_NAME='dolphin'
 DOLPHIN_URL="https://github.com/dolphin-emu/${DOLPHIN_REPO_NAME}.git"
 DOLPHIN_REPO_SOURCES='sources/dolphin-emu/dolphin-emu.yaml'
 
+DAWN_REPO_GITHUB_USER='encounter'
 DAWN_REPO_NAME='dawn'
-DAWN_URL="https://dawn.googlesource.com/${DAWN_REPO_NAME}"
+DAWN_URL="https://github.com/${DAWN_REPO_GITHUB_USER}/${DAWN_REPO_NAME}.git"
 NATIVE_PREBUILT_SOURCES='sources/Wiicompiled/cmake/native-prebuilt-sources.yaml'
 DAWN_SUBMODULE_SOURCES='sources/Wiicompiled/cmake/dawn-submodule-sources.yaml'
 
