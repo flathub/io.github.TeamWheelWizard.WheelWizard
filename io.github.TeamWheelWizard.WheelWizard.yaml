@@ -514,6 +514,13 @@ modules:
           # Will be cleaned up later in cleanup-commands
           cp -r "./$dir" "${FLATPAK_DEST}/extensions/backends/wiicompiled/workspace/$dir"
         done
+      # Don't include Git submodule-specific data
+      - >-
+        find
+        "${FLATPAK_DEST}/extensions/backends/wiicompiled/workspace"
+        -name .git
+        -prune
+        -exec rm -rf {} +
       # Clean up the workspace
       - >-
         find
