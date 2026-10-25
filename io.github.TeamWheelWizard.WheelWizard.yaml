@@ -165,7 +165,7 @@ modules:
           env:
             RUNTIME: linux-x64
     build-commands:
-      - git apply app-id.patch
+      - git apply ui.patch
       - >-
         DOTNET_CLI_TELEMETRY_OPTOUT=true dotnet
         publish

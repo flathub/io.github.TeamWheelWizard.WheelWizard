@@ -1,5 +1,5 @@
 - type: git
   url: https://github.com/TeamWheelWizard/WheelWizard.git
-  commit: 14c0c7cd34697980bc8f8cf2189920e64a2526cb
+  commit: f7dd02c8374501e7925f25ab02b0818abb44e46a
 - type: file
-  path: patches/WheelWizard/app-id.patch
+  path: patches/WheelWizard/ui.patch
