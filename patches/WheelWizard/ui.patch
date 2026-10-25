@@ -1,0 +1,38 @@
+diff --git a/WheelWizard.Test/Views/Shell/ViewModels/HomeViewModelTests.cs b/WheelWizard.Test/Views/Shell/ViewModels/HomeViewModelTests.cs
+index 17627a39..69d4aee6 100644
+--- a/WheelWizard.Test/Views/Shell/ViewModels/HomeViewModelTests.cs
++++ b/WheelWizard.Test/Views/Shell/ViewModels/HomeViewModelTests.cs
+@@ -41,12 +41,10 @@ public class HomeViewModelTests
+         await fixture.Model.ExecuteMainAsync();
+         Assert.True(fixture.Model.IsBusy);
+         Assert.False(fixture.Model.CanExecuteMain);
+-        fixture.Presentation.Received(1).SetApplicationInteractable(false);
+         install.SetResult(Ok());
+         await first;
+ 
+         await fixture.Launcher.Received(1).Install();
+-        fixture.Presentation.Received(1).SetApplicationInteractable(true);
+         Assert.False(fixture.Model.IsBusy);
+         Assert.True(fixture.Model.IsInteractable);
+     }
+@@ -62,7 +60,6 @@ public class HomeViewModelTests
+         await fixture.Model.ExecuteMainAsync();
+ 
+         fixture.Presentation.Received(1).ShowError(Arg.Is<OperationError>(error => error.Exception is IOException));
+-        fixture.Presentation.Received(1).SetApplicationInteractable(true);
+         Assert.True(fixture.Model.CanExecuteMain);
+     }
+ 
+diff --git a/WheelWizard/Views/Shell/ViewModels/HomeViewModel.cs b/WheelWizard/Views/Shell/ViewModels/HomeViewModel.cs
+index 36c75e75..253847a4 100644
+--- a/WheelWizard/Views/Shell/ViewModels/HomeViewModel.cs
++++ b/WheelWizard/Views/Shell/ViewModels/HomeViewModel.cs
+@@ -141,7 +141,7 @@ public sealed class HomeViewModel : INotifyPropertyChanged, IDisposable
+         if (!CanExecuteMain)
+             return;
+         var action = _status;
+-        var setup = action is WheelWizardStatus.NotInstalled or WheelWizardStatus.OutOfDate;
++        var setup = false;
+         await RunActionAsync(
+             async () =>
+             {

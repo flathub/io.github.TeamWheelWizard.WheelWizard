@@ -197,6 +197,13 @@
     },
     {
         "type": "file",
+        "url": "https://api.nuget.org/v3-flatcontainer/lzma-sdk/22.1.1/lzma-sdk.22.1.1.nupkg",
+        "sha512": "5d42dbf23b3524f5f067bf94a5cfa2d6d7a917c3ec34dd97e83beafcede4a44e66a5a6255dce6e8e756c176ef6b6c9819019a4db0ddb71aaa553797828abf763",
+        "dest": "nuget-sources",
+        "dest-filename": "lzma-sdk.22.1.1.nupkg"
+    },
+    {
+        "type": "file",
         "url": "https://api.nuget.org/v3-flatcontainer/microcom.runtime/0.11.6/microcom.runtime.0.11.6.nupkg",
         "sha512": "6357e26e35bdcc31a1adb458f1eba1273026e138865b7f7098ce0cdf29135c317f58afa0a8c015b64c5b6315ce02c496413bc178bfd726935d8d32af63f732c1",
         "dest": "nuget-sources",
@@ -526,6 +533,13 @@
     },
     {
         "type": "file",
+        "url": "https://api.nuget.org/v3-flatcontainer/rvzsharp/1.1.1/rvzsharp.1.1.1.nupkg",
+        "sha512": "db734b91f2ee5f4be68f4717cfa256f667f21560fd469cbf0c808d5d359b4c2d964e4f13e577de6e996bf9dafc57b095081a17d35b9df48d8f31c9bb02a9ffdb",
+        "dest": "nuget-sources",
+        "dest-filename": "rvzsharp.1.1.1.nupkg"
+    },
+    {
+        "type": "file",
         "url": "https://api.nuget.org/v3-flatcontainer/semver/3.0.0/semver.3.0.0.nupkg",
         "sha512": "5f96cb1287dca1c8f288a64c68aaff637294cb54f00fc4fbe777bc934911a37fbaed120aa98d7fa36b5304fac2aa3ef81bc98e5d427dcfdf4de6b9fe5570ab70",
         "dest": "nuget-sources",
@@ -572,6 +586,13 @@
         "sha512": "f494108380de31779145601e358647cca06e6a06facb30972a0bbd04958dd59f5be349ffaaa9d4f2e35acd17489b649bc55345d9ef2a04736aa95e5aa8e9d3c1",
         "dest": "nuget-sources",
         "dest-filename": "sharpcompress.0.48.1.nupkg"
+    },
+    {
+        "type": "file",
+        "url": "https://api.nuget.org/v3-flatcontainer/sharpziplib/1.4.2/sharpziplib.1.4.2.nupkg",
+        "sha512": "4e080196e9b20427d1b5abe23943d647c365611247cf571d3cf2575808be7294b9957050aed57fa34326ef8965bbb314e03944693216502d0eb990253dfc94f4",
+        "dest": "nuget-sources",
+        "dest-filename": "sharpziplib.1.4.2.nupkg"
     },
     {
         "type": "file",
@@ -747,5 +768,12 @@
         "sha512": "3d7463eb51c365452884612439059811c6131d3bce35df4748f3e373f0c9f8e5c175c8f8791d4532d6d2f3a36197d4630b4af7263081167f5f9ef13143f8ddab",
         "dest": "nuget-sources",
         "dest-filename": "yamldotnet.17.1.0.nupkg"
+    },
+    {
+        "type": "file",
+        "url": "https://api.nuget.org/v3-flatcontainer/zstdsharp.port/0.8.8/zstdsharp.port.0.8.8.nupkg",
+        "sha512": "8ba3b518ff04e8c8747ebc7d82bca16fab36b0e5a23808b6878681e130cea1ffb7f4e1396964ca8b2537eef13a6170ef1cce0c90d6c8536ba7b6ad96fa0e26fb",
+        "dest": "nuget-sources",
+        "dest-filename": "zstdsharp.port.0.8.8.nupkg"
     }
 ]
