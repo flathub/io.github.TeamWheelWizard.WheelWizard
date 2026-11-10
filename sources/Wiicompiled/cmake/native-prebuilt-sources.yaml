@@ -8,8 +8,8 @@
   sha256: a7e8bcbec0e6f761b4af24f25677626b35f762f68eef79c08677a363212d11f6
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/mkw_mbedtls_upstream-src
 - type: archive
-  url: https://github.com/libsdl-org/SDL/releases/download/release-3.4.18/SDL3-3.4.18.tar.gz
-  sha256: 9c75cf16330322c217dedd2e0609f1124f1b54b8633e763467b4684d0f4334a3
+  url: https://github.com/libsdl-org/SDL/releases/download/release-3.4.20/SDL3-3.4.20.tar.gz
+  sha256: f3bb06f55bed9557227a700af2ea62e49497ebdf58037732a731a5fb3ef8581f
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/sdl-src
 - type: archive
   url: https://github.com/abseil/abseil-cpp/archive/refs/tags/20260817.0.tar.gz
@@ -20,8 +20,8 @@
   sha256: 5738270935e7c3d38a79b3adf7c9692566ce7895a25f67de43ad52ab504acd32
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/xxhash-src
 - type: archive
-  url: https://github.com/fmtlib/fmt/archive/refs/tags/12.2.0.tar.gz
-  sha256: 8b852bb5aa6e7d8564f9e81394055395dd1d1936d38dfd3a17792a02bebd7af0
+  url: https://github.com/fmtlib/fmt/archive/refs/tags/12.2.1.tar.gz
+  sha256: 449374d74f31b67796dece454d59b93e6f1538efcce0e9ac78000c98142c139e
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/fmt-src
 - type: archive
   url: https://github.com/zlib-ng/zlib-ng/archive/refs/tags/2.3.3.tar.gz
@@ -32,25 +32,22 @@
   sha256: 2540302a1844ad2b2b501977abecfa850f265f97b78f065a712ab4074a89f5b5
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/png-src
 - type: archive
-  url: https://files.twilitrealm.dev/freetype-2.14.3.tar.gz
-  mirror-urls:
-    - https://download.savannah.gnu.org/releases/freetype/freetype-2.14.3.tar.gz
-    - https://downloads.sourceforge.net/project/freetype/freetype2/2.14.3/freetype-2.14.3.tar.gz
-  sha256: e61b31ab26358b946e767ed7eb7f4bb2e507da1cfefeb7a8861ace7fd5c899a1
+  url: https://download.savannah.gnu.org/releases/freetype/freetype-2.15.0.tar.gz
+  sha256: 9186627467a616d9a9e3e574748ac0c45fa77398e6364edef3041a8ba8d92f64
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/freetype-src
 - type: archive
-  url: https://github.com/ocornut/imgui/archive/refs/tags/v1.92.9b-docking.tar.gz
-  sha256: 90ded916bd57db2e0e171b6b098940a47c6f5042725dcdc67fb19940ca8bfdcc
+  url: https://github.com/ocornut/imgui/archive/refs/tags/v1.93.0-docking.tar.gz
+  sha256: 746c265540bd3aa109570f29492ef4d8f5b421dd9fd0049c35ca35f21496f1a5
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/imgui-src
 - type: archive
-  url: https://sqlite.org/2026/sqlite-amalgamation-3530400.zip
-  sha256: 1e71ddf93849c6a6ecf58b827c0692073d2dd7ee40196158068f7b29f422e87d
+  url: https://sqlite.org/2026/sqlite-amalgamation-3540100.zip
+  sha256: 0a9c8e34352dad46006aa82836d5383bff9dc6bc9ce5a60553c05aa30e6ad1f9
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/sqlite3-src
 - type: archive
   url: https://github.com/facebook/zstd/releases/download/v1.5.7/zstd-1.5.7.tar.gz
   sha256: eb33e51f49a15e023950cd7825ca74a4a2b43db8354825ac24fc1b7ee09e6fa3
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/zstd-src
 - type: archive
-  url: https://github.com/wolfpld/tracy/archive/refs/tags/v0.14.1.tar.gz
-  sha256: bf4af567e9c7524d07f3caa745fad02fb33bd5694f11910750382d1efbb251c1
+  url: https://github.com/wolfpld/tracy/archive/refs/tags/v0.15.0.tar.gz
+  sha256: 3d57da54aa67d7875da1e8fecd0bd5957675cef73c27dd52bffb6ab8d290a5e6
   dest: Wiicompiled/build/native-prebuilt-stage/_deps/tracy-src
